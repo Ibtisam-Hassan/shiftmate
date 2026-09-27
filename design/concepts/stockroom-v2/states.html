@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShiftMate · Stockroom v2 · States</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=Libre+Franklin:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --background: #EDE3D3; --foreground: #241C14; --muted-foreground: #66563F; --border: #DDCDB5; --card: #FFFFFF; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: "Libre Franklin", system-ui, sans-serif; font-size: 14px; padding: 24px 20px 40px; }
+h1 { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 40px; margin: 0 0 4px; line-height: 1; }
+.lead { margin: 0 0 22px; color: var(--muted-foreground); max-width: 70ch; }
+.frames { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 20px; }
+figure { margin: 0; }
+figure.full { grid-column: 1 / -1; }
+figcaption { margin-bottom: 8px; display: flex; gap: 12px; align-items: baseline; }
+figcaption b { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 24px; }
+figcaption span { color: var(--muted-foreground); max-width: 80ch; }
+.win { position: relative; overflow: hidden; border-radius: 4px; box-shadow: 0 0 0 1px var(--border), 0 2px 0 rgba(90,60,30,.15); background: var(--card); }
+.win iframe { position: absolute; left: 0; top: 0; width: 1440px; height: 1300px; border: 0; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<h1>Stockroom v2: states and panels</h1>
+<p class="lead">Each frame is the real <code>index.html</code> at 1:1, opened in a different state and cropped to the part that matters. Same tokens and code as the main grid.</p>
+<div class="frames">
+  <figure class="full"><figcaption><b>Published, with an unsent edit</b><span>The draft banner becomes a record of when the week went out. Editing a published shift keeps it as a pending change (blue ring) until you press “Send 1 update”, which notifies only the people affected, in the app.</span></figcaption>
+    <div class="win" style="height:420px"><iframe src="index.html?state=published&frame=pub" data-frame="pub" data-mode="top" title="Published state"></iframe></div></figure>
+  <figure class="full"><figcaption><b>Empty week</b><span>An empty week is an invitation: copy last week (the common case, re-checked against time off and availability) or start from a template. Publish is disabled with the reason beside it.</span></figcaption>
+    <div class="win" style="height:520px"><iframe src="index.html?state=empty&frame=empty" data-frame="empty" data-mode="top" title="Empty week"></iframe></div></figure>
+  <figure class="full"><figcaption><b>Loading</b><span>The skeleton has the grid’s shape (names, day columns, coverage strip, bars on tracks), so nothing jumps when data arrives. The shimmer stops under reduced motion.</span></figcaption>
+    <div class="win" style="height:440px"><iframe src="index.html?state=loading&frame=load" data-frame="load" data-mode="top" title="Loading state"></iframe></div></figure>
+  <figure><figcaption><b>Shift details</b><span>Click Tyler’s Wed 1–7. Time on the day’s track with the break marked, pay, the week’s hours meter, notes, this shift’s conflicts, and actions.</span></figcaption>
+    <div class="win" style="height:680px"><iframe src="index.html?panel=popover&frame=pop" data-frame="pop" title="Shift popover"></iframe></div></figure>
+  <figure><figcaption><b>Assign an open shift</b><span>Sun 10–6 Cashier. Ranked by added overtime, then rest, then cost; each person shows hours before and after on the meter. Everyone left out gets a reason.</span></figcaption>
+    <div class="win" style="height:680px"><iframe src="index.html?panel=assign&frame=assign" data-frame="assign" title="Assign panel"></iframe></div></figure>
+  <figure class="full"><figcaption><b>Mid-drag</b><span>Dragging Omar’s Sun 7–3 Stock. The source turns into a dashed outline, free cells in the column are tinted blue, busy or unavailable cells are hatched and say why, and a live hint prices the drop before you let go.</span></figcaption>
+    <div class="win" style="height:560px"><iframe src="index.html?panel=drag&frame=drag" data-frame="drag" title="Mid-drag"></iframe></div></figure>
+</div>
+<script>
+addEventListener("message", e => {
+  const d = e.data || {}; const fr = document.querySelector(`iframe[data-frame="${d.frame}"]`); if (!fr) return;
+  const win = fr.parentElement, W = win.clientWidth, H = win.clientHeight;
+  let x = (1440 - W) / 2, y = 0;
+  if (d.box && fr.dataset.mode !== "top") {
+    x = Math.max(0, Math.min((d.box.l + d.box.r) / 2 - W / 2, 1440 - W));
+    // keep the whole panel in view; fall back to its top edge if it is taller than the frame
+    const want = d.box.pb - d.box.pt + 60 <= H ? Math.min(d.box.t - 30, d.box.pt - 30) : d.box.pt - 30;
+    y = Math.max(0, Math.min(want, 1300 - H));
+  }
+  fr.style.transform = `translate(${-x}px, ${-y}px)`;
+});
+</script>
+</body>
+</html>

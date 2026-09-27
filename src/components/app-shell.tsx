@@ -26,10 +26,10 @@ const ICONS = {
 
 interface ShellUser { name: string; email: string; role: string; scope: string; isDemo: boolean }
 
-function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
+function NavLinks({ items, onNavigate, vertical }: { items: NavItem[]; onNavigate?: () => void; vertical?: boolean }) {
   const pathname = usePathname();
   return (
-    <nav className="grid gap-1">
+    <nav className={cn("flex gap-1", vertical ? "flex-col" : "items-stretch")}>
       {items.map((item) => {
         const Icon = ICONS[item.icon];
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -40,11 +40,12 @@ function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => 
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-              active && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+              "flex items-center gap-2 px-3 text-sm font-medium text-kraft-foreground/75 transition-colors hover:text-kraft-foreground",
+              vertical ? "rounded-md py-2 hover:bg-accent" : "border-b-2 border-transparent py-3",
+              active && (vertical ? "bg-accent text-kraft-foreground" : "border-kraft-foreground text-kraft-foreground"),
             )}
           >
-            <Icon className="size-4" aria-hidden />
+            {vertical && <Icon className="size-4" aria-hidden />}
             {item.label}
           </Link>
         );
@@ -60,12 +61,12 @@ function UserMenu({ user }: { user: ShellUser }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-auto w-full justify-start gap-3 px-2 py-2">
-          <Avatar className="size-8"><AvatarFallback>{initials}</AvatarFallback></Avatar>
-          <span className="min-w-0 text-left">
-            <span className="block truncate text-sm font-medium">{user.name}</span>
-            <span className="block truncate text-xs text-muted-foreground">{user.scope}</span>
+        <Button variant="ghost" className="h-auto gap-2 px-1.5 py-1 hover:bg-black/5" aria-label="Account menu">
+          <span className="hidden text-right sm:block">
+            <span className="block text-sm font-medium leading-tight">{user.name}</span>
+            <span className="block text-xs leading-tight text-kraft-foreground/70">{user.scope}</span>
           </span>
+          <Avatar className="size-8"><AvatarFallback className="bg-kraft-foreground text-kraft text-xs font-semibold">{initials}</AvatarFallback></Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -95,30 +96,29 @@ function UserMenu({ user }: { user: ShellUser }) {
 export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavItem[]; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex min-h-dvh">
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r bg-sidebar p-3 md:flex">
-        <div className="px-2 py-3"><Logo /></div>
-        <div className="mt-4 flex-1"><NavLinks items={nav} /></div>
-        {user.isDemo && <Badge variant="secondary" className="mx-2 mb-2 w-fit">Demo · resets nightly</Badge>}
-        <UserMenu user={user} />
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 py-2 backdrop-blur md:hidden">
-          <Logo />
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Open menu"><Menu /></Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="flex w-64 flex-col p-3">
-              <SheetTitle className="px-2 py-3"><Logo /></SheetTitle>
-              <div className="flex-1"><NavLinks items={nav} onNavigate={() => setOpen(false)} /></div>
-              <UserMenu user={user} />
-            </SheetContent>
-          </Sheet>
-        </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
-      </div>
+    <div className="flex min-h-dvh flex-col">
+      <header className="sticky top-0 z-30 bg-kraft text-kraft-foreground">
+        <div className="flex items-center gap-6 px-4 md:px-6">
+          <Link href="/" className="py-3"><Logo /></Link>
+          <div className="hidden flex-1 md:block"><NavLinks items={nav} /></div>
+          <div className="ml-auto flex items-center gap-2">
+            {user.isDemo && <Badge variant="outline" className="hidden border-kraft-foreground/30 text-kraft-foreground lg:inline-flex">Demo data resets nightly</Badge>}
+            <UserMenu user={user} />
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu"><Menu /></Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-3">
+                <SheetTitle className="px-2 py-3"><Logo /></SheetTitle>
+                <NavLinks items={nav} vertical onNavigate={() => setOpen(false)} />
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+      <main className="flex-1 p-3 md:p-5">
+        <div className="min-h-full rounded-[3px] bg-card p-4 shadow-[0_1px_0_var(--border)] md:p-6">{children}</div>
+      </main>
     </div>
   );
 }

@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShiftMate · Stockroom v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Big+Shoulders+Stencil+Display:wght@800&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ---- tokens: identical to v1 ---- */
+:root {
+  --background: #EDE3D3; --foreground: #241C14; --card: #FFFFFF; --card-foreground: #241C14;
+  --primary: #7A4B1E; --primary-foreground: #FFFFFF; --muted: #F6F0E6; --muted-foreground: #66563F;
+  --accent: #F3E2C2; --accent-foreground: #241C14; --border: #DDCDB5; --ring: #1D5FB4; --destructive: #B3122B;
+  --pos-cashier: #1D5FB4; --pos-stock: #6A3FA0; --pos-floor: #1C7543; --pos-supervisor: #3A2E22;
+  --warning: #855400; --warning-bg: #FCEAB8; --danger: #B3122B; --danger-bg: #FBE4E6;
+  --overtime: #A8246A; --overtime-bg: #F9E1EE; --kraft: #C9A57A; --kraft-foreground: #241C14; --track: #EFE6D8;
+}
+[data-theme="dark"] {
+  --background: #16110C; --foreground: #F1E8DC; --card: #211A13; --card-foreground: #F1E8DC;
+  --primary: #E2B87F; --primary-foreground: #241C14; --muted: #2A2219; --muted-foreground: #BFAE97;
+  --accent: #3A2D1F; --accent-foreground: #F1E8DC; --border: #3E3226; --ring: #7EB0F2; --destructive: #F27E88;
+  --pos-cashier: #72A8F0; --pos-stock: #B394EA; --pos-floor: #5BC28D; --pos-supervisor: #E6D9C6;
+  --warning: #F2C35A; --warning-bg: #3A2B0C; --danger: #F27E88; --danger-bg: #3E1519;
+  --overtime: #F283BC; --overtime-bg: #3C1629; --kraft: #4A3824; --kraft-foreground: #F4E6D2; --track: #2E251B;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--background); color: var(--foreground); font-family: "Libre Franklin", system-ui, sans-serif; font-size: 13px; line-height: 1.35; font-variant-numeric: tabular-nums lining-nums; -webkit-font-smoothing: antialiased; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.big { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ---- status glyphs: shape + colour, never colour alone ---- */
+.ic { display: inline-grid; place-items: center; flex: none; width: 15px; height: 15px; font-size: 10px; font-weight: 800; line-height: 1; }
+.ic.x { border-radius: 50%; background: var(--danger); color: var(--card); }
+.ic.w { background: var(--warning); color: var(--card); clip-path: polygon(50% 0, 100% 100%, 0 100%); padding-top: 4px; font-size: 9px; }
+.ic.o { border-radius: 3px; background: var(--overtime); color: var(--card); font-size: 9px; width: 17px; }
+.ic.k { border-radius: 50%; border: 1.5px solid var(--muted-foreground); color: var(--muted-foreground); font-size: 9px; }
+.ic.g { background: repeating-linear-gradient(-45deg, var(--danger) 0 2px, transparent 2px 4px); border: 1.5px solid var(--danger); border-radius: 2px; }
+
+/* ---- top bar ---- */
+.topbar { background: var(--kraft); color: var(--kraft-foreground); display: flex; align-items: center; gap: 22px; padding: 0 20px; height: 52px; }
+.mark { font-family: "Big Shoulders Stencil Display", sans-serif; font-weight: 800; font-size: 26px; }
+.stores { display: flex; gap: 2px; background: color-mix(in srgb, var(--kraft-foreground) 10%, transparent); border-radius: 6px; padding: 3px; }
+.stores button { border: 0; background: none; padding: 5px 12px; border-radius: 4px; font-weight: 600; }
+.stores button[aria-pressed="true"] { background: var(--card); color: var(--foreground); box-shadow: 0 1px 0 rgba(60,40,20,.25); }
+.tabs { display: flex; gap: 18px; align-self: stretch; }
+.tabs a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 6px; font-weight: 500; border-bottom: 3px solid transparent; padding-top: 3px; }
+.tabs a[aria-current] { border-bottom-color: var(--kraft-foreground); font-weight: 700; }
+.n { background: var(--kraft-foreground); color: var(--kraft); font-size: 11px; font-weight: 700; border-radius: 9px; padding: 0 6px; }
+.spacer { flex: 1; }
+.iconbtn { border: 1px solid color-mix(in srgb, var(--kraft-foreground) 30%, transparent); background: none; border-radius: 6px; min-width: 34px; height: 32px; position: relative; }
+.iconbtn .dot { position: absolute; top: -4px; right: -5px; background: var(--danger); color: #fff; border-radius: 9px; font-size: 10px; font-weight: 700; padding: 0 5px; }
+.av { width: 32px; height: 32px; border-radius: 50%; background: var(--kraft-foreground); color: var(--kraft); display: grid; place-items: center; font-weight: 700; font-size: 12px; }
+
+/* ---- page: sheet + review rail ---- */
+.page { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; padding: 12px 16px 20px; align-items: start; }
+.page.collapsed { grid-template-columns: minmax(0, 1fr) 48px; }
+.sheet { background: var(--card); border-radius: 3px; box-shadow: 0 1px 0 rgba(90,60,30,.18), 0 0 0 1px var(--border); min-width: 0; }
+.head { display: flex; align-items: center; gap: 14px; padding: 12px 18px 10px; flex-wrap: wrap; }
+.head h1 { margin: 0; font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 32px; line-height: .9; }
+.picker { display: flex; align-items: center; gap: 4px; }
+.btn { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 6px 12px; font-weight: 600; min-height: 32px; }
+.btn.sq { width: 32px; padding: 0; }
+.btn.week { font-weight: 500; }
+.publish { background: var(--primary); color: var(--primary-foreground); border: 0; border-radius: 6px; padding: 8px 18px; font-weight: 700; min-height: 34px; }
+.publish:disabled { background: var(--muted); color: var(--muted-foreground); box-shadow: inset 0 0 0 1px var(--border); cursor: not-allowed; }
+.why { color: var(--muted-foreground); font-size: 12px; text-align: right; max-width: 260px; line-height: 1.3; }
+.why b { color: var(--danger); }
+
+.banner { display: flex; align-items: center; gap: 14px; margin: 0 18px; padding: 8px 12px 8px 24px; border-radius: 3px; position: relative; overflow: hidden; }
+.banner p { margin: 0; }
+.banner.draft { background: var(--warning-bg); }
+.banner.draft::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 12px; background: repeating-linear-gradient(-45deg, #E8B400 0 6px, #241C14 6px 12px); }
+.banner.pub { background: var(--accent); padding-left: 14px; }
+.banner .act { margin-left: auto; white-space: nowrap; }
+.linkbtn { border: 0; background: none; padding: 0; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+.toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 18px 0; flex-wrap: wrap; }
+.chip { border: 1px solid var(--border); background: var(--card); border-radius: 16px; padding: 4px 11px 4px 9px; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; min-height: 30px; }
+.chip i { width: 14px; height: 6px; border-radius: 3px; background: var(--c); }
+.chip[aria-pressed="true"] { background: var(--foreground); color: var(--card); border-color: var(--foreground); }
+.chip[aria-pressed="true"] i { box-shadow: 0 0 0 1.5px var(--card); }
+.toggle { display: inline-flex; align-items: center; gap: 8px; margin-left: 10px; font-weight: 500; border: 0; background: none; min-height: 30px; }
+.toggle .sw { width: 32px; height: 18px; border-radius: 9px; background: var(--track); box-shadow: inset 0 0 0 1px var(--border); position: relative; }
+.toggle .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted-foreground); transition: left .15s; }
+.toggle[aria-pressed="true"] .sw { background: var(--primary); }
+.toggle[aria-pressed="true"] .sw::after { left: 16px; background: var(--primary-foreground); }
+.search { margin-left: auto; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; width: 190px; background: var(--card); min-height: 32px; }
+.search::placeholder { color: var(--muted-foreground); }
+
+/* ---- labor strip ---- */
+.slip { display: flex; align-items: stretch; margin: 10px 18px 0; border-top: 2px solid var(--foreground); border-bottom: 1px solid var(--border); }
+.slip > div { padding: 7px 16px 7px 0; margin-right: 16px; border-right: 1px dashed var(--border); }
+.slip small { display: block; color: var(--muted-foreground); font-size: 12px; }
+.slip .v { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 27px; line-height: 1; }
+.slip .d { font-size: 11.5px; color: var(--muted-foreground); margin-left: 4px; }
+.slip .ot .v { color: var(--overtime); }
+.slip .bud { flex: 1; border-right: 0; margin-right: 0; padding-right: 0; display: flex; flex-direction: column; justify-content: center; gap: 5px; min-width: 200px; }
+.meter { height: 10px; background: var(--track); border-radius: 5px; position: relative; overflow: hidden; }
+.meter b { position: absolute; inset: 0 auto 0 0; background: var(--primary); }
+.meter em { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(-45deg, var(--overtime) 0 3px, color-mix(in srgb, var(--overtime) 60%, var(--card)) 3px 5px); }
+.bud .row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted-foreground); }
+.bud .row b { color: var(--foreground); }
+.key { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; }
+.key i { width: 10px; height: 8px; border-radius: 2px; }
+
+/* ---- grid ---- */
+.gridwrap { margin: 8px 18px 0; position: relative; }
+.grid { display: grid; grid-template-columns: 200px repeat(7, minmax(0, 1fr)); }
+.row { display: contents; }
+.h { padding: 4px 8px 5px; border-bottom: 2px solid var(--foreground); display: flex; align-items: flex-end; gap: 5px; background: var(--card); position: sticky; top: 0; z-index: 3; }
+.h .dn { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 26px; line-height: .9; }
+.h .dw { font-weight: 600; }
+.h small { margin-left: auto; color: var(--muted-foreground); font-size: 11.5px; }
+.h.first { flex-direction: column; align-items: flex-start; gap: 0; justify-content: flex-end; }
+.h.first small { margin-left: 0; }
+
+/* coverage strip: headcount per hour, 6a to 11p */
+.covlabel { border-bottom: 1px solid var(--border); padding: 4px 10px 4px 0; font-size: 11.5px; color: var(--muted-foreground); display: flex; flex-direction: column; justify-content: center; }
+.covlabel b { color: var(--foreground); font-weight: 600; }
+.cov { border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); padding: 4px 7px 3px; }
+.hist { display: flex; align-items: flex-end; gap: 1px; height: 18px; }
+.hist span { flex: 1; background: color-mix(in srgb, var(--muted-foreground) 45%, var(--card)); border-radius: 1px 1px 0 0; min-height: 1px; }
+.hist span.closed { background: var(--track); }
+.hist span.gap { background: repeating-linear-gradient(-45deg, var(--danger) 0 2px, transparent 2px 4px); box-shadow: inset 0 0 0 1px var(--danger); height: 100% !important; }
+.ticks { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted-foreground); margin-top: 1px; }
+.covnote { font-size: 11px; font-weight: 700; color: var(--danger); display: flex; gap: 4px; align-items: center; white-space: nowrap; overflow: hidden; }
+
+.who { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 3px; min-width: 0; }
+.who .nm { font-weight: 600; display: flex; gap: 7px; align-items: center; white-space: nowrap; }
+.who .nm i { width: 12px; height: 4px; border-radius: 2px; flex: none; }
+.who .nm small { font-weight: 400; color: var(--muted-foreground); font-size: 11.5px; }
+.who.ot { box-shadow: inset 3px 0 0 var(--overtime); padding-left: 8px; }
+/* hours meter: 0 to 48 h, 40 h tick, overtime zone hatched */
+.hm { display: flex; align-items: center; gap: 7px; font-size: 11.5px; }
+.hm .bar { flex: 1; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--track) 0 83.33%, color-mix(in srgb, var(--overtime) 16%, var(--track)) 83.33%); position: relative; }
+.hm .bar::after { content: ""; position: absolute; left: 83.33%; top: -2px; bottom: -2px; width: 1.5px; background: var(--foreground); }
+.hm .bar b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px 0 0 3px; background: var(--foreground); }
+.hm .bar em { position: absolute; top: 0; bottom: 0; left: 83.33%; background: var(--overtime); }
+.hm .t { font-weight: 700; min-width: 34px; text-align: right; }
+.who.ot .hm .t { color: var(--overtime); }
+.hm .ok { color: var(--muted-foreground); font-weight: 600; }
+
+.c { border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); padding: 5px 7px 6px; position: relative; min-height: 46px; display: flex; flex-direction: column; gap: 3px; justify-content: center; container-type: inline-size; }
+.c::before, .c::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: color-mix(in srgb, var(--border) 60%, transparent); pointer-events: none; }
+.c::before { left: calc(7px + (100% - 14px) * 6 / 17); } .c::after { left: calc(7px + (100% - 14px) * 12 / 17); }
+.c.conf { background: var(--danger-bg); }
+.c.we { background: color-mix(in srgb, var(--muted) 70%, transparent); }
+.c.hl { box-shadow: inset 0 0 0 2px var(--ring); animation: hl .9s ease-out 2; }
+@keyframes hl { 0% { background-color: color-mix(in srgb, var(--ring) 22%, transparent); } }
+.rowopen .c, .rowopen .who { background: color-mix(in srgb, var(--accent) 50%, transparent); }
+
+.s { border: 0; background: none; padding: 1px 0; text-align: left; position: relative; z-index: 1; border-radius: 4px; width: 100%; }
+.s:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.s.sel { outline: 2px solid var(--ring); outline-offset: 2px; }
+.s .lbl { display: flex; justify-content: space-between; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap; }
+.s .lbl b { font-weight: 700; }
+.s .lbl .pos { color: var(--muted-foreground); }
+.s .lbl .note { font-weight: 700; display: inline-flex; gap: 4px; align-items: center; }
+.s.warn .note { color: var(--warning); } .s.bad .note { color: var(--danger); } .s.kept .note { color: var(--muted-foreground); }
+.s .tr { display: block; height: 8px; margin-top: 3px; border-radius: 4px; background: var(--track); position: relative; }
+.s .bar { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--c); }
+.s.warn .bar { background: repeating-linear-gradient(-45deg, var(--c) 0 5px, var(--warning) 5px 8px); }
+.s.bad .bar { outline: 2px solid var(--danger); outline-offset: 1px; }
+.s.open .bar { background: none; border: 2px dashed var(--c); }
+.s.open .lbl .pos { color: var(--foreground); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
+.s.edited .bar { box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px var(--ring); }
+.s .grip { position: absolute; left: -7px; top: 50%; transform: translateY(-50%); width: 8px; height: 18px; opacity: 0; color: var(--muted-foreground); font-size: 10px; line-height: 6px; letter-spacing: -1px; }
+.s:hover .grip, .s:focus-visible .grip, .s.dragsrc .grip { opacity: 1; }
+.s:hover { cursor: grab; }
+/* Words only when the whole label fits; the widest pair ("10:00–10:00" + "✕ Double-booked") needs ~176px.
+   Below that the cell shows an icon; position falls back to a short word. The reason is in the tooltip and popover. */
+.s .lbl .wide { display: none; } .s .lbl .narrow { display: inline-flex; }
+@container (min-width: 176px) { .s .lbl .wide { display: inline-flex; } .s .lbl .narrow { display: none; } }
+.off { position: absolute; inset: 5px 7px; border-radius: 3px; display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--muted-foreground); border: 1px dashed var(--border); background: var(--muted); }
+
+/* drag states */
+.c.drop-ok { background: color-mix(in srgb, var(--ring) 9%, var(--card)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ring) 55%, transparent); }
+.c.drop-ok::after { display: none; }
+.c.drop-no { background: repeating-linear-gradient(-45deg, var(--muted) 0 6px, var(--card) 6px 10px); }
+.c.drop-no .dropwhy { position: absolute; right: 5px; top: 4px; font-size: 10.5px; font-weight: 700; color: var(--muted-foreground); display: flex; gap: 3px; align-items: center; z-index: 2; background: var(--card); padding: 0 3px; border-radius: 3px; }
+.c.drop-no .s { opacity: .5; }
+.c.drop-over { box-shadow: inset 0 0 0 2px var(--ring); background: color-mix(in srgb, var(--ring) 16%, var(--card)); }
+.s.dragsrc { opacity: .45; }
+.s.dragsrc .bar { background: none; border: 2px dashed var(--c); }
+.ghost { position: absolute; z-index: 20; pointer-events: none; transform: rotate(-1.5deg); background: var(--card); border-radius: 5px; padding: 4px 8px 6px; box-shadow: 0 8px 20px rgba(40,25,10,.28), 0 0 0 1px var(--border); width: 150px; }
+.hint { position: absolute; z-index: 21; background: var(--foreground); color: var(--card); border-radius: 6px; padding: 7px 10px; font-size: 12px; line-height: 1.4; width: 250px; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+.hint b { font-weight: 700; }
+.hint .otx { color: color-mix(in srgb, var(--overtime) 45%, var(--card)); font-weight: 700; }
+.cursor { position: absolute; z-index: 22; font-size: 18px; pointer-events: none; }
+
+.legend { display: flex; gap: 16px; margin: 0 18px; padding: 9px 0 12px; color: var(--muted-foreground); font-size: 12px; flex-wrap: wrap; align-items: center; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.legend .sw { width: 16px; height: 6px; border-radius: 3px; background: var(--c); }
+.legend .kbd { margin-left: auto; }
+kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 3px; padding: 0 4px; background: var(--muted); color: var(--foreground); }
+.cash { --c: var(--pos-cashier); } .stock { --c: var(--pos-stock); } .floor { --c: var(--pos-floor); } .sup { --c: var(--pos-supervisor); }
+
+/* ---- review rail ---- */
+.rail { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; background: var(--card); border-radius: 3px; box-shadow: 0 1px 0 rgba(90,60,30,.18), 0 0 0 1px var(--border); }
+.rail .rh { display: flex; align-items: center; gap: 8px; padding: 12px 12px 4px 14px; }
+.rail h2 { margin: 0; font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 24px; line-height: 1; }
+.rail .sum { margin: 0 14px 8px; color: var(--muted-foreground); }
+.rail h3 { font-size: 12px; font-weight: 700; margin: 10px 14px 5px; display: flex; gap: 6px; align-items: center; }
+.rail ul { list-style: none; margin: 0; padding: 0 8px; display: flex; flex-direction: column; gap: 6px; }
+.it { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.it.x { border-left: 4px solid var(--danger); } .it.w, .it.g { border-left: 4px solid var(--warning); } .it.o { border-left: 4px solid var(--overtime); } .it.op { border-left: 4px dashed var(--border); }
+.it .go { display: grid; grid-template-columns: 17px 1fr; gap: 8px; width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px 4px; }
+.it .go:hover b { text-decoration: underline; }
+.it .go b { display: block; font-weight: 600; }
+.it .go span.d { color: var(--muted-foreground); font-size: 12px; }
+.it .fix { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 10px 9px 35px; }
+.fixbtn { border: 1px solid var(--border); background: var(--card); border-radius: 5px; padding: 4px 9px; font-size: 12px; font-weight: 600; min-height: 28px; }
+.fixbtn.primary { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.keep { display: flex; gap: 6px; padding: 0 10px 9px 35px; }
+.keep input { flex: 1; border: 1px solid var(--border); border-radius: 5px; padding: 4px 8px; font-size: 12px; min-width: 0; background: var(--card); }
+.rail .foot { margin: 12px 14px 14px; padding-top: 10px; border-top: 1px dashed var(--border); color: var(--muted-foreground); font-size: 12px; }
+.rail .clear { margin: 6px 14px; padding: 10px; background: var(--muted); border-radius: 6px; }
+.collapsed .rail .body { display: none; }
+.collapsed .rail .rh { flex-direction: column; padding: 10px 6px; }
+.collapsed .rail h2 { writing-mode: vertical-rl; font-size: 20px; }
+.collapsed .rail .count { writing-mode: horizontal-tb; }
+.count { background: var(--danger); color: #fff; border-radius: 9px; font-size: 11px; font-weight: 700; padding: 1px 6px; font-family: "Libre Franklin", sans-serif; }
+
+/* ---- popovers ---- */
+.pop { position: absolute; z-index: 30; width: 330px; background: var(--card); border-radius: 8px; box-shadow: 0 14px 34px rgba(40,25,10,.28), 0 0 0 1px var(--border); }
+.pop .ph { display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px 8px; border-bottom: 1px solid var(--border); }
+.pop .ph .t { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 26px; line-height: 1; }
+.pop .ph small { display: block; color: var(--muted-foreground); font-size: 12px; margin-top: 2px; }
+.pop .close { margin-left: auto; border: 0; background: none; font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 4px; }
+.pop dl { display: grid; grid-template-columns: 84px 1fr; gap: 6px 10px; margin: 0; padding: 10px 14px; }
+.pop dt { color: var(--muted-foreground); }
+.pop dd { margin: 0; }
+.pop .tr { display: block; height: 8px; border-radius: 4px; background: var(--track); position: relative; margin: 2px 14px 2px; }
+.pop .tr .bar { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--c); }
+.pop .tr .brk { position: absolute; top: -2px; bottom: -2px; width: 4px; background: var(--card); border-radius: 1px; }
+.pop .probs { margin: 0 14px 10px; padding: 8px 10px; border-radius: 6px; background: var(--danger-bg); display: flex; flex-direction: column; gap: 5px; }
+.pop .probs.w { background: var(--warning-bg); }
+.pop .probs div { display: flex; gap: 7px; align-items: flex-start; }
+.pop .acts { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 12px; border-top: 1px solid var(--border); }
+.pop .acts .danger { color: var(--danger); margin-left: auto; }
+.pop.assign { width: 400px; }
+.cands { list-style: none; margin: 0; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+.cand { display: grid; grid-template-columns: 18px 1fr auto; gap: 4px 10px; align-items: center; padding: 8px; border-radius: 6px; }
+.cand:first-child { background: var(--muted); }
+.cand .rk { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 20px; color: var(--muted-foreground); }
+.cand b { font-weight: 600; }
+.cand .why2 { color: var(--muted-foreground); font-size: 12px; display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.cand .why2 .bad { color: var(--overtime); font-weight: 700; }
+.cand .why2 .wn { color: var(--warning); font-weight: 700; }
+.cand .hm { grid-column: 2; }
+.cand .hm .bar { max-width: 150px; }
+.cand .right { text-align: right; grid-row: 1 / span 2; grid-column: 3; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.cand .cost { font-weight: 700; }
+.notsug { padding: 8px 14px 12px; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: 12px; }
+.notsug b { color: var(--foreground); font-weight: 600; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--foreground); color: var(--card); padding: 10px 16px; border-radius: 6px; font-weight: 600; z-index: 50; }
+
+/* ---- empty + loading ---- */
+.empty { position: absolute; left: 50%; top: 150px; transform: translateX(-50%); width: 460px; background: var(--card); border-radius: 6px; box-shadow: 0 12px 30px rgba(40,25,10,.2), 0 0 0 1px var(--border); padding: 20px 22px; z-index: 5; }
+.empty h2 { margin: 0 0 4px; font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 28px; }
+.empty p { margin: 0 0 14px; color: var(--muted-foreground); }
+.empty .opt { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; width: 100%; text-align: left; background: var(--card); }
+.empty .opt.main { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.empty .opt small { color: var(--muted-foreground); grid-column: 1; }
+.empty .opt .go2 { grid-row: 1 / span 2; grid-column: 2; font-weight: 700; color: var(--primary); }
+.sk { background: var(--track); border-radius: 4px; position: relative; overflow: hidden; }
+.sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--card) 60%, transparent), transparent); transform: translateX(-100%); animation: shim 1.4s infinite; }
+@keyframes shim { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .sk::after, .c.hl { animation: none; } .toggle .sw::after { transition: none; } }
+
+@media (max-width: 1360px) {
+  .page { grid-template-columns: minmax(0, 1fr) 272px; padding: 10px 12px; gap: 10px; }
+  .grid { grid-template-columns: 172px repeat(7, minmax(0, 1fr)); }
+  .tabs { gap: 12px; } .topbar { gap: 16px; }
+  .search { width: 150px; }
+  #copy { display: none; }
+  .head h1 { font-size: 28px; }
+  .why { max-width: 210px; font-size: 11.5px; }
+  .slip > div { padding-right: 12px; margin-right: 12px; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <span class="mark">ShiftMate</span>
+  <div class="stores" role="group" aria-label="Store">
+    <button aria-pressed="true">Downtown</button><button aria-pressed="false">Riverside</button><button aria-pressed="false">Oak Park</button>
+  </div>
+  <nav class="tabs" aria-label="Main">
+    <a href="#" aria-current="page">Schedule</a><a href="#">Team</a><a href="#">Time off <span class="n">2</span></a><a href="#">Swaps <span class="n">1</span></a><a href="#">Labor</a>
+  </nav>
+  <span class="spacer"></span>
+  <button class="iconbtn" aria-label="Notifications, 2 new">🔔<span class="dot">2</span></button>
+  <button class="iconbtn" id="theme" aria-label="Switch light or dark">◐</button>
+  <span class="av" title="Dana Whitfield, store manager">DW</span>
+</header>
+<div class="page" id="page">
+  <div class="sheet">
+    <div class="head">
+      <h1 id="title">Week of Sep 28</h1>
+      <div class="picker">
+        <button class="btn sq" aria-label="Previous week">‹</button>
+        <button class="btn week" id="weekbtn" aria-haspopup="dialog">Sep 28 – Oct 4 ▾</button>
+        <button class="btn sq" aria-label="Next week">›</button>
+        <button class="btn" id="thisweek">This week</button>
+      </div>
+      <span class="spacer"></span>
+      <button class="btn" id="copy">Copy last week</button>
+      <span class="why" id="why"></span>
+      <button class="publish" id="publish">Publish week</button>
+    </div>
+    <div id="banner"></div>
+    <div class="toolbar" id="toolbar">
+      <span style="color:var(--muted-foreground);font-weight:600;margin-right:2px">Show</span>
+      <button class="chip" data-f="all" aria-pressed="true">Everyone</button>
+      <button class="chip cash" data-f="cash" aria-pressed="false"><i></i>Cashier</button>
+      <button class="chip stock" data-f="stock" aria-pressed="false"><i></i>Stock</button>
+      <button class="chip floor" data-f="floor" aria-pressed="false"><i></i>Floor</button>
+      <button class="chip sup" data-f="sup" aria-pressed="false"><i></i>Supervisor</button>
+      <button class="toggle" id="probs" aria-pressed="false"><span class="sw"></span>Problems only</button>
+      <input class="search" id="q" type="search" placeholder="Find a person" aria-label="Find a person">
+    </div>
+    <section class="slip" id="slip" aria-label="Labor cost"></section>
+    <div class="gridwrap" id="gridwrap"><div class="grid" id="grid" role="grid" aria-label="Weekly schedule"></div></div>
+    <div class="legend">
+      <span class="cash"><i class="sw"></i>Cashier</span><span class="stock"><i class="sw"></i>Stock</span><span class="floor"><i class="sw"></i>Floor</span><span class="sup"><i class="sw"></i>Supervisor</span>
+      <span><i class="ic x">✕</i>Blocks publishing</span><span><i class="ic w">!</i>Check first (striped bar)</span>
+      <span class="kbd"><kbd>Tab</kbd> to a shift, <kbd>Enter</kbd> for details, <kbd>M</kbd> then arrows to move, <kbd>Esc</kbd> to cancel</span>
+    </div>
+  </div>
+  <aside class="rail" id="rail" aria-label="Ready to publish"></aside>
+</div>
+<script>
+const P = new URLSearchParams(location.search);
+const MODE = P.get("state") || "draft";        // draft | published | empty | loading
+const PANEL = P.get("panel");                   // popover | assign | drag
+if (P.get("theme")) document.documentElement.dataset.theme = P.get("theme");
+if (P.get("rail") === "closed") document.getElementById("page").classList.add("collapsed");
+
+const DAYS = [["Mon",28,"Sep"],["Tue",29,"Sep"],["Wed",30,"Sep"],["Thu",1,"Oct"],["Fri",2,"Oct"],["Sat",3,"Oct"],["Sun",4,"Oct"]];
+const LONG = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const POS = { cash: "Cashier", stock: "Stock", floor: "Floor", sup: "Supervisor" };
+const SHORT = { cash: "Cash", stock: "Stock", floor: "Floor", sup: "Sup" };
+const PEOPLE = [
+  { n: "Marcus Bell", p: "sup", r: 24.5, t: ["sup","cash","floor"] }, { n: "Priya Raman", p: "cash", r: 17, t: ["cash"] },
+  { n: "Jordan Ellis", p: "stock", r: 18.25, t: ["stock","cash"] }, { n: "Sofia Alvarez", p: "floor", r: 17.5, t: ["floor","cash"] },
+  { n: "Tyler Brooks", p: "cash", r: 16.75, t: ["cash","stock","floor"] }, { n: "Aisha Khan", p: "floor", r: 17.25, t: ["floor"] },
+  { n: "Ben Okafor", p: "stock", r: 17.75, t: ["stock","cash"] }, { n: "Hannah Lee", p: "cash", r: 16.5, t: ["cash","floor"] },
+  { n: "Luis Moreno", p: "floor", r: 17, t: ["floor","stock"] }, { n: "Grace Chen", p: "cash", r: 16.5, t: ["cash"] },
+  { n: "Omar Haddad", p: "stock", r: 17.25, t: ["stock","floor"] },
+];
+const first = i => PEOPLE[i].n.split(" ")[0];
+// person -> day -> [from, to, reason]
+const AVAIL = { 5: { 3: [0, 12, "Aisha is unavailable Thursdays before 12:00"] }, 1: { 6: [0, 24, "Priya is unavailable on Sundays"] } };
+const TIMEOFF = { 7: [4, 5] };
+const OPEN_HRS = [[9,21],[9,21],[9,21],[9,21],[9,21],[9,21],[10,18]];
+const MIN_STAFF = 2, DAY0 = 6, SPAN = 17, BUDGET = 7400, LAST = { h: 346, cost: 6277 };
+const NOTES = { "4-2-13": "Truck delivery: help unload and break down boxes", "2-5-6": "Truck day", "0-0-8": "Opening key holder" };
+let SH = [
+  [0,0,8,16,"sup"],[0,1,8,16,"sup"],[0,2,8,16,"sup"],[0,3,12,18,"sup"],[0,5,9,17,"sup"],
+  [1,0,9,17,"cash"],[1,1,9,17,"cash"],[1,3,15,21,"cash"],[1,4,15,21,"cash"],[1,5,10,18,"cash"],
+  [2,0,6,14,"stock"],[2,1,6,14,"stock"],[2,2,6,14,"stock"],[2,3,6,14,"stock"],[2,4,6,14,"stock"],[2,5,6,10,"stock"],
+  [3,1,12,20,"floor"],[3,2,12,20,"floor"],[3,4,10,18,"floor"],[3,5,12,20,"floor"],[3,6,11,17,"floor"],
+  [4,0,15,21,"cash"],[4,2,9,17,"cash"],[4,2,13,19,"stock"],[4,4,9,15,"cash"],[4,6,10,18,"cash"],
+  [5,0,12,20,"floor"],[5,3,9,15,"floor"],[5,5,9,17,"floor"],[5,6,12,18,"floor"],
+  [6,1,14,22,"stock"],[6,2,14,22,"stock"],[6,4,14,22,"stock"],[6,5,6,12,"stock"],
+  [7,0,10,16,"cash"],[7,1,15,21,"cash"],[7,2,15,21,"cash"],[7,3,9,15,"cash"],
+  [8,0,9,17,"floor"],[8,2,9,17,"floor"],[8,3,12,20,"floor"],[8,4,12,20,"floor"],[8,6,9,15,"floor"],
+  [9,3,17,21,"cash"],[9,5,13,21,"cash"],[9,6,12,16,"cash"],
+  [10,0,14,22,"stock"],[10,3,14,22,"stock"],[10,5,12,20,"stock"],[10,6,7,15,"stock"],
+  [null,4,17,22,"stock"],[null,5,12,20,"floor"],[null,6,10,18,"cash"],
+].map((s, k) => ({ id: "s" + k, p: s[0], d: s[1], a: s[2], b: s[3], pos: s[4], note: NOTES[`${s[0]}-${s[1]}-${s[2]}`] || "" }));
+
+const st = { approved: new Set(), kept: {}, filter: "all", probs: false, q: "", edited: new Set() };
+if (MODE === "published") {                     // the week after Dana fixed things and published
+  SH.find(s => s.p === 4 && s.d === 2 && s.pos === "stock").p = 10;
+  st.approved.add(2);
+  st.kept.s27 = "Aisha agreed to come in early this week"; st.kept.s33 = "Ben asked for the early start";
+  const sat = SH.find(s => s.p === 10 && s.d === 5); sat.b = 21;
+  const luis = SH.find(s => s.p === 8 && s.d === 4); luis.a = 13; luis.b = 21; st.edited.add(luis.id);
+}
+if (MODE === "empty") SH = [];
+
+const f = h => `${h % 12 || 12}:${h % 1 ? "30" : "00"}`;
+const fs = s => `${f(s.a)}–${f(s.b)}`;
+const fc = s => { const c = h => `${h % 12 || 12}${h % 1 ? ":30" : ""}`; return `${c(s.a)}–${c(s.b)}`; };
+const dur = s => s.b - s.a;
+const brk = s => dur(s) >= 6 ? 0.5 : 0;
+const money = v => "$" + Math.round(v).toLocaleString("en-US");
+const money2 = v => "$" + v.toFixed(2);
+const hoursOf = i => SH.filter(s => s.p === i).reduce((a, s) => a + dur(s), 0);
+const payFor = (i, h) => { const r = PEOPLE[i].r, ot = Math.max(0, h - 40); return { reg: (h - ot) * r, ot: ot * r * 1.5, otH: ot }; };
+const overlaps = (x, y) => x.a < y.b && y.a < x.b;
+const dayLabel = d => `${DAYS[d][0]} ${DAYS[d][2]} ${DAYS[d][1]}`;
+
+function coverage(d) {
+  const counts = [];
+  for (let h = DAY0; h < DAY0 + SPAN; h++) counts.push(SH.filter(s => s.p !== null && s.d === d && s.a <= h && s.b > h).length);
+  const [o, c] = OPEN_HRS[d];
+  const gaps = counts.map((n, k) => (k + DAY0 >= o && k + DAY0 < c && n < MIN_STAFF) ? k + DAY0 : null).filter(x => x !== null);
+  return { counts, gaps };
+}
+const hourName = h => `${h % 12 || 12}${h < 12 ? "a" : "p"}`;
+
+function problems() {
+  const out = [];
+  PEOPLE.forEach((pp, i) => DAYS.forEach((d, di) => {
+    const ss = SH.filter(s => s.p === i && s.d === di);
+    for (let x = 0; x < ss.length; x++) for (let y = x + 1; y < ss.length; y++) if (overlaps(ss[x], ss[y])) {
+      const o = Math.min(ss[x].b, ss[y].b) - Math.max(ss[x].a, ss[y].a);
+      out.push({ k: "x", type: "double", p: i, d: di, ids: [ss[x].id, ss[y].id],
+        title: `${first(i)} is double-booked ${DAYS[di][0]}`,
+        text: `${POS[ss[x].pos]} ${fs(ss[x])} and ${POS[ss[y].pos]} ${fs(ss[y])} overlap by ${o} h.` });
+    }
+  }));
+  PEOPLE.forEach((pp, i) => {
+    const h = hoursOf(i);
+    if (h > 40 && !st.approved.has(i)) {
+      const pay = payFor(i, h), last = SH.filter(s => s.p === i).sort((a, b) => b.d - a.d)[0];
+      out.push({ k: "o", type: "ot", p: i, d: last.d, ids: [last.id], title: `${first(i)} is at ${h} h`,
+        text: `${pay.otH} h overtime at 1.5× (${money2(pay.ot)}) needs your approval.` });
+    }
+  });
+  SH.forEach(s => {
+    if (s.p === null) return;
+    const av = AVAIL[s.p] && AVAIL[s.p][s.d];
+    if (av && s.a < av[1] && s.b > av[0]) out.push({ k: "w", type: "avail", p: s.p, d: s.d, ids: [s.id], av,
+      title: `${first(s.p)} ${DAYS[s.d][0]} ${fs(s)} is outside availability`, text: av[2] + "." });
+    const prev = SH.filter(x => x.p === s.p && x.d === s.d - 1).sort((a, b) => b.b - a.b)[0];
+    if (prev) { const rest = 24 - prev.b + s.a; if (rest < 10) out.push({ k: "w", type: "rest", p: s.p, d: s.d, ids: [s.id], rest, prev,
+      title: `${first(s.p)} gets ${rest} h between shifts`, text: `Closes ${DAYS[prev.d][0]} at ${f(prev.b)}, opens ${DAYS[s.d][0]} at ${f(s.a)}. Minimum is 10 h.` }); }
+  });
+  DAYS.forEach((d, di) => { const c = coverage(di); if (c.gaps.length && SH.length) out.push({ k: "g", type: "gap", d: di, gaps: c.gaps, ids: [],
+    title: `${DAYS[di][0]} ${hourName(c.gaps[0])}–${hourName(c.gaps[c.gaps.length - 1] + 1)} has 1 person`, text: `The store needs at least ${MIN_STAFF} on the floor while open.` }); });
+  return out.map(p => ({ ...p, kept: p.ids.length === 1 && st.kept[p.ids[0]] && p.k === "w" }));
+}
+function flagOf(s, probs) {
+  const mine = probs.filter(p => p.ids.includes(s.id) && p.type !== "ot");
+  if (mine.some(p => p.k === "x")) return ["bad", mine.find(p => p.k === "x")];
+  const w = mine.find(p => p.k === "w" && !p.kept); if (w) return ["warn", w];
+  const k = mine.find(p => p.kept); if (k) return ["kept", k];
+  return ["", null];
+}
+const shortWord = p => p.type === "double" ? "Double-booked" : p.type === "avail" ? "Unavailable" : p.type === "rest" ? "Short rest" : "Kept";
+
+function candidates(shift) {
+  const good = [], not = [];
+  PEOPLE.forEach((pp, i) => {
+    if (i === shift.p) return;
+    if (!pp.t.includes(shift.pos)) { not.push([i, `not trained on ${POS[shift.pos]}`]); return; }
+    if (TIMEOFF[i] && TIMEOFF[i].includes(shift.d)) { not.push([i, "time off"]); return; }
+    const av = AVAIL[i] && AVAIL[i][shift.d];
+    if (av && shift.a < av[1] && shift.b > av[0]) { not.push([i, av[1] === 24 ? `unavailable ${LONG[shift.d]}s` : `unavailable before ${f(av[1])}`]); return; }
+    const busy = SH.find(s => s.p === i && s.d === shift.d && overlaps(s, shift));
+    if (busy) { not.push([i, `working ${fs(busy)}`]); return; }
+    const prev = SH.filter(x => x.p === i && x.d === shift.d - 1).sort((a, b) => b.b - a.b)[0];
+    const next = SH.filter(x => x.p === i && x.d === shift.d + 1).sort((a, b) => a.a - b.a)[0];
+    const restWarn = (prev && 24 - prev.b + shift.a < 10) || (next && 24 - shift.b + next.a < 10);
+    const sameDay = SH.find(s => s.p === i && s.d === shift.d);
+    const h = hoursOf(i), after = h + dur(shift);
+    const before = payFor(i, h), aft = payFor(i, after);
+    const cost = aft.reg + aft.ot - before.reg - before.ot;
+    good.push({ i, h, after, otAdd: aft.otH - before.otH, cost, restWarn, sameDay, main: pp.p === shift.pos });
+  });
+  good.sort((x, y) => (x.otAdd - y.otAdd) || (x.restWarn - y.restWarn) || (!!x.sameDay - !!y.sameDay) || (x.cost - y.cost));
+  return { good, not };
+}
+
+function meter(h, after) {
+  const pct = v => Math.min(v, 48) / 48 * 100;
+  const base = Math.min(after ?? h, 40);
+  return `<span class="bar"><b style="width:${pct(base)}%"></b>${(after ?? h) > 40 ? `<em style="width:${pct(after ?? h) - pct(40)}%"></em>` : ""}</span>`;
+}
+
+/* ---------- render ---------- */
+const posVar = p => `var(--pos-${p === "cash" ? "cashier" : p === "sup" ? "supervisor" : p})`;
+function bar(s, probs) {
+  const open = s.p === null, [flag, pr] = open ? ["", null] : flagOf(s, probs);
+  const icon = flag === "bad" ? `<i class="ic x" aria-hidden="true">✕</i>` : flag === "warn" ? `<i class="ic w" aria-hidden="true">!</i>` : flag === "kept" ? `<i class="ic k" aria-hidden="true">✓</i>` : "";
+  const word = pr ? shortWord(pr) : "";
+  const reason = pr ? (pr.kept ? `Kept anyway: ${st.kept[s.id]}` : `${pr.title}. ${pr.text}`) : "";
+  const posTxt = open ? "Assign" : POS[s.pos], posShort = open ? "Assign" : SHORT[s.pos];
+  const left = (s.a - DAY0) / SPAN * 100, w = dur(s) / SPAN * 100;
+  const label = `${open ? "Open shift" : PEOPLE[s.p].n}, ${LONG[s.d]} ${fs(s)}, ${POS[s.pos]}${reason ? ". " + reason : ""}`;
+  return `<button class="s ${s.pos} ${flag} ${open ? "open" : ""} ${st.edited.has(s.id) ? "edited" : ""}" data-id="${s.id}" title="${reason || label}" aria-label="${label}">
+    <span class="grip" aria-hidden="true">⋮⋮</span>
+    <span class="lbl"><b><span class="wide">${fs(s)}</span><span class="narrow">${fc(s)}</span></b>${pr
+      ? `<span class="note wide">${icon}${word}</span><span class="note narrow">${icon}</span>`
+      : `<span class="pos wide">${posTxt}</span><span class="pos narrow">${posShort}</span>`}</span>
+    <span class="tr"><span class="bar" style="left:${left}%;width:${w}%"></span></span></button>`;
+}
+
+function renderGrid() {
+  const probs = problems();
+  const g = document.getElementById("grid");
+  if (MODE === "loading") { g.innerHTML = skeleton(); return; }
+  let html = `<div class="row"><div class="h first"><b>Team</b><small>11 people, by role</small></div>` +
+    DAYS.map((d, di) => { const hrs = SH.filter(s => s.d === di && s.p !== null).reduce((a, s) => a + dur(s), 0);
+      return `<div class="h"><span class="dn">${d[1]}</span><span class="dw">${d[0]}</span><small>${hrs} h</small></div>`; }).join("") + `</div>`;
+  html += `<div class="row"><div class="covlabel"><b>Coverage</b>people per hour, min ${MIN_STAFF}</div>` + DAYS.map((d, di) => {
+    const c = coverage(di), [o, cl] = OPEN_HRS[di];
+    const bars = c.counts.map((n, k) => { const h = k + DAY0, closed = h < o || h >= cl, gap = c.gaps.includes(h) && SH.length;
+      return `<span class="${gap ? "gap" : closed ? "closed" : ""}" style="height:${Math.max(n, 0.15) / 6 * 100}%" title="${hourName(h)}: ${n} ${n === 1 ? "person" : "people"}${gap ? ", below minimum" : ""}"></span>`; }).join("");
+    const note = c.gaps.length && SH.length ? `<span class="covnote" title="Only ${c.counts[c.gaps[0] - DAY0]} on shift ${hourName(c.gaps[0])}–${hourName(c.gaps.at(-1) + 1)}"><i class="ic g" aria-hidden="true"></i>${hourName(c.gaps[0])}–${hourName(c.gaps.at(-1) + 1)}</span>` : `<span class="ticks"><span>6a</span><span>12p</span><span>6p</span></span>`;
+    return `<div class="cov" id="cov-${di}"><div class="hist" role="img" aria-label="${LONG[di]} coverage${c.gaps.length ? ", gap " + hourName(c.gaps[0]) : ""}">${bars}</div>${note}</div>`; }).join("") + `</div>`;
+  const openS = SH.filter(s => s.p === null);
+  html += `<div class="row rowopen" data-open><div class="who"><div class="nm">Open shifts</div><div class="hm"><span style="color:var(--muted-foreground)">Unassigned, click to assign</span><span class="t">${openS.length}</span></div></div>` +
+    DAYS.map((d, di) => `<div class="c" data-d="${di}" id="c-o-${di}">${openS.filter(s => s.d === di).map(s => bar(s, probs)).join("")}</div>`).join("") + `</div>`;
+  PEOPLE.forEach((pp, i) => {
+    const h = hoursOf(i), over = h > 40, hasProb = probs.some(p => p.p === i && !p.kept);
+    const hide = (st.filter !== "all" && pp.p !== st.filter) || (st.probs && !hasProb) || (st.q && !pp.n.toLowerCase().includes(st.q));
+    html += `<div class="row ${hide ? "" : ""}" ${hide ? "hidden" : ""} data-p="${i}"><div class="who ${over ? "ot" : ""}">
+      <div class="nm"><i style="background:${posVar(pp.p)}"></i>${pp.n}</div>
+      <div class="hm" title="${h} of 40 h${over ? `, ${h - 40} h overtime${st.approved.has(i) ? " (approved)" : ""}` : ""}">${meter(h)}<span class="t">${h} h</span>${over && st.approved.has(i) ? `<span class="ok">OT ok</span>` : ""}</div></div>` +
+      DAYS.map((d, di) => {
+        if (TIMEOFF[i] && TIMEOFF[i].includes(di)) return `<div class="c" id="c-${i}-${di}" data-p="${i}" data-d="${di}"><div class="off">Time off</div></div>`;
+        const ss = SH.filter(s => s.p === i && s.d === di);
+        const conf = ss.some(s => flagOf(s, probs)[0] === "bad");
+        return `<div class="c ${conf ? "conf" : ""} ${di > 4 ? "we" : ""}" id="c-${i}-${di}" data-p="${i}" data-d="${di}">${ss.map(s => bar(s, probs)).join("")}</div>`;
+      }).join("") + `</div>`;
+  });
+  g.innerHTML = html;
+}
+
+function skeleton() {
+  const W = [[0,1,1,1,0,1,0],[1,1,0,1,1,1,0],[1,1,1,1,1,1,0],[0,1,1,0,1,1,1],[1,0,1,0,1,0,1],[1,0,0,1,0,1,1],[0,1,1,0,1,1,0],[1,1,1,1,0,0,0],[1,0,1,1,1,0,1],[0,0,0,1,0,1,1],[1,0,0,1,0,1,1]];
+  let h = `<div class="row"><div class="h first"><span class="sk" style="width:60px;height:14px"></span></div>${DAYS.map(() => `<div class="h"><span class="sk" style="width:70%;height:22px"></span></div>`).join("")}</div>`;
+  h += `<div class="row"><div class="covlabel"><span class="sk" style="width:90px;height:10px"></span></div>${DAYS.map(() => `<div class="cov"><span class="sk" style="display:block;height:18px"></span></div>`).join("")}</div>`;
+  W.forEach((r, i) => { h += `<div class="row"><div class="who"><span class="sk" style="width:${90 + (i * 37) % 50}px;height:12px"></span><span class="sk" style="width:120px;height:6px"></span></div>` +
+    r.map((on, d) => `<div class="c">${on ? `<span class="sk" style="width:60%;height:10px"></span><span class="sk" style="margin-left:${(i * 13 + d * 7) % 35}%;width:${35 + (i + d) % 3 * 8}%;height:8px"></span>` : ""}</div>`).join("") + `</div>`; });
+  return h;
+}
+
+function renderLabor() {
+  const el = document.getElementById("slip");
+  if (MODE === "loading") { el.innerHTML = [1,2,3,4].map(() => `<div><span class="sk" style="display:block;width:70px;height:10px;margin-bottom:6px"></span><span class="sk" style="display:block;width:80px;height:22px"></span></div>`).join("") + `<div class="bud"><span class="sk" style="display:block;height:10px"></span></div>`; return; }
+  let total = 0, reg = 0, ot = 0, otH = 0;
+  PEOPLE.forEach((p, i) => { const h = hoursOf(i), pay = payFor(i, h); total += h; reg += pay.reg; ot += pay.ot; otH += pay.otH; });
+  const spend = reg + ot, dh = total - LAST.h, dc = spend - LAST.cost;
+  const delta = (v, unit) => MODE === "empty" ? "" : `<span class="d">${v >= 0 ? "▲" : "▼"} ${unit === "$" ? money(Math.abs(v)) : Math.abs(v) + " h"} vs last week</span>`;
+  el.innerHTML = `
+    <div><small>Scheduled</small><span class="v">${total} h</span>${delta(dh, "h")}</div>
+    <div><small>Regular pay</small><span class="v">${money(reg)}</span></div>
+    <div class="ot"><small>Overtime pay${otH ? ` (${otH} h × 1.5)` : ""}</small><span class="v">${money(ot)}</span></div>
+    <div><small>Total labor</small><span class="v">${money(spend)}</span>${delta(dc, "$")}</div>
+    <div class="bud"><div class="row"><span>Downtown weekly budget ${money(BUDGET)}</span><b>${money(BUDGET - spend)} left</b></div>
+      <div class="meter" role="img" aria-label="${Math.round(spend / BUDGET * 100)}% of budget used"><b style="width:${reg / BUDGET * 100}%"></b><em style="left:${reg / BUDGET * 100}%;width:${ot / BUDGET * 100}%"></em></div>
+      <div class="row"><span><span class="key"><i style="background:var(--primary)"></i>Regular ${Math.round(reg / BUDGET * 100)}%</span><span class="key"><i style="background:var(--overtime)"></i>Overtime ${(ot / BUDGET * 100).toFixed(1)}%</span></span><span>${Math.round(spend / BUDGET * 100)}% used</span></div></div>`;
+}
+
+function renderChrome() {
+  const probs = problems(), blockers = probs.filter(p => p.k === "x" || p.k === "o"), warns = probs.filter(p => (p.k === "w" || p.k === "g") && !p.kept);
+  const pub = document.getElementById("publish"), why = document.getElementById("why"), ban = document.getElementById("banner");
+  document.getElementById("title").textContent = MODE === "empty" ? "Week of Oct 5" : "Week of Sep 28";
+  document.getElementById("weekbtn").textContent = MODE === "empty" ? "Oct 5 – Oct 11 ▾" : "Sep 28 – Oct 4 ▾";
+  if (MODE === "loading") { pub.disabled = true; why.textContent = ""; ban.innerHTML = `<div class="banner" style="padding:0 0 0 0"><span class="sk" style="display:block;width:100%;height:32px"></span></div>`; return; }
+  if (MODE === "empty") { pub.disabled = true; why.innerHTML = "Add shifts to publish."; ban.innerHTML = ""; return; }
+  if (MODE === "published") {
+    pub.disabled = false; pub.textContent = `Send ${st.edited.size} update`; why.innerHTML = `Luis gets an in-app update when you send.`;
+    ban.innerHTML = `<div class="banner pub" role="status"><span class="ic k" style="border-color:var(--foreground);color:var(--foreground)">✓</span><p><b>Published Fri Sep 25 at 4:12 pm.</b> 11 people were notified in the app. You changed <b>1 shift</b> since then; it stays a draft until you send it.</p><button class="linkbtn act">See what changed</button></div>`;
+    return;
+  }
+  pub.disabled = blockers.length > 0;
+  const parts = [];
+  const dbl = blockers.filter(b => b.type === "double").length, ot = blockers.filter(b => b.type === "ot");
+  if (dbl) parts.push(`fix ${dbl} double-booking${dbl > 1 ? "s" : ""}`);
+  if (ot.length) parts.push(`approve ${ot.map(o => first(o.p) + "’s").join(", ")} overtime`);
+  why.innerHTML = blockers.length ? `<b>Can’t publish yet:</b> ${parts.join(" and ")}.` : warns.length ? `${warns.length} warning${warns.length > 1 ? "s" : ""} left; you can still publish.` : "Everything checks out.";
+  ban.innerHTML = `<div class="banner draft" role="status"><p><b>Draft.</b> Staff can’t see this week until you publish. Publishing notifies 11 people in the app.</p>
+    <button class="linkbtn act" id="openrail">Review ${blockers.length} blocker${blockers.length === 1 ? "" : "s"} and ${warns.length} warning${warns.length === 1 ? "" : "s"}</button></div>`;
+  document.getElementById("openrail").onclick = () => document.getElementById("page").classList.remove("collapsed");
+}
+
+function item(p) {
+  const icon = { x: `<i class="ic x">✕</i>`, o: `<i class="ic o">OT</i>`, w: `<i class="ic w">!</i>`, g: `<i class="ic g"></i>` }[p.k];
+  let fixes = "";
+  if (p.type === "double") {
+    const s = SH.find(x => x.id === p.ids[1]), c = candidates(s).good[0];
+    fixes = (c ? `<button class="fixbtn primary" data-act="move" data-id="${s.id}" data-to="${c.i}">Move ${first(p.p)}’s ${fs(s)} to ${first(c.i)}</button>` : "") +
+      `<button class="fixbtn" data-act="open" data-id="${s.id}">Make it an open shift</button>`;
+  } else if (p.type === "ot") {
+    const s = SH.find(x => x.id === p.ids[0]);
+    fixes = `<button class="fixbtn primary" data-act="approve" data-p="${p.p}">Approve ${hoursOf(p.p) - 40} h overtime</button><button class="fixbtn" data-act="open" data-id="${s.id}">Make ${DAYS[s.d][0]} ${fs(s)} open</button>`;
+  } else if (p.type === "avail") {
+    fixes = `<button class="fixbtn" data-act="start" data-id="${p.ids[0]}" data-h="${p.av[1]}">Start at ${f(p.av[1])} instead</button><button class="fixbtn" data-act="keep" data-id="${p.ids[0]}">Keep anyway…</button>`;
+  } else if (p.type === "rest") {
+    fixes = `<button class="fixbtn" data-act="start" data-id="${p.ids[0]}" data-h="${p.prev.b - 14}">Start at ${f(p.prev.b - 14)} instead</button><button class="fixbtn" data-act="keep" data-id="${p.ids[0]}">Keep anyway…</button>`;
+  } else if (p.type === "gap") {
+    const end = p.gaps[0], ext = SH.filter(s => s.p !== null && s.d === p.d && s.b === end).sort((a, b) => hoursOf(a.p) - hoursOf(b.p))[0];
+    if (ext) fixes = `<button class="fixbtn" data-act="extend" data-id="${ext.id}" data-h="${p.gaps.at(-1) + 1}">Extend ${first(ext.p)} to ${f(p.gaps.at(-1) + 1)} (${hoursOf(ext.p)} → ${hoursOf(ext.p) + p.gaps.length} h)</button>`;
+  }
+  const target = p.type === "gap" ? `cov-${p.d}` : p.type === "ot" ? `c-${p.p}-${p.d}` : `c-${p.p}-${p.d}`;
+  return `<li class="it ${p.k}"><button class="go" data-target="${target}">${icon}<span><b>${p.title}</b><span class="d">${p.text}</span></span></button><div class="fix">${fixes}</div></li>`;
+}
+
+function renderRail() {
+  const r = document.getElementById("rail");
+  if (MODE === "loading") { r.innerHTML = `<div class="rh"><span class="sk" style="width:160px;height:22px"></span></div><div class="body" style="padding:10px 14px;display:flex;flex-direction:column;gap:8px">${[1,2,3].map(() => `<span class="sk" style="display:block;height:58px"></span>`).join("")}</div>`; return; }
+  const probs = problems();
+  const blocks = probs.filter(p => p.k === "x" || p.k === "o"), warns = probs.filter(p => (p.k === "w" || p.k === "g") && !p.kept), kept = probs.filter(p => p.kept);
+  const opens = SH.filter(s => s.p === null);
+  let body = "";
+  if (MODE === "empty") body = `<p class="sum">Nothing to check yet. Problems show up here as you add shifts.</p>`;
+  else if (MODE === "published") body = `<p class="sum">Published and clear. 1 change waiting to send.</p><div class="clear"><b>Luis Moreno, Fri Oct 2</b><br><span style="color:var(--muted-foreground)">Was 12:00–8:00, now 1:00–9:00. He’ll get an in-app update when you send.</span></div>`;
+  else {
+    body = `<p class="sum">${blocks.length ? `${blocks.length} thing${blocks.length > 1 ? "s" : ""} block publishing.` : "Nothing blocks publishing."} Click an item to find it on the grid.</p>`;
+    if (blocks.length) body += `<h3>Blocks publishing</h3><ul>${blocks.map(item).join("")}</ul>`;
+    if (warns.length) body += `<h3>Check before publishing</h3><ul>${warns.map(item).join("")}</ul>`;
+    if (opens.length) body += `<h3>Open shifts</h3><ul>${opens.map(s => `<li class="it op"><button class="go" data-target="c-o-${s.d}"><i class="ic k" style="border-style:dashed"></i><span><b>${dayLabel(s.d)}, ${fs(s)}</b><span class="d">${POS[s.pos]}, ${dur(s)} h. Publishing offers it to qualified staff.</span></span></button><div class="fix"><button class="fixbtn" data-act="assign" data-id="${s.id}">Assign someone</button></div></li>`).join("")}</ul>`;
+    if (kept.length) body += `<h3>Kept anyway</h3><ul>${kept.map(p => `<li class="it"><button class="go" data-target="c-${p.p}-${p.d}"><i class="ic k">✓</i><span><b>${p.title}</b><span class="d">Reason: ${st.kept[p.ids[0]]}</span></span></button></li>`).join("")}</ul>`;
+    body += `<p class="foot">Publishing notifies 11 people in the app (the bell in ShiftMate). Open shifts are offered to everyone qualified.</p>`;
+  }
+  r.innerHTML = `<div class="rh"><h2>Ready to publish?</h2>${blocks.length && MODE === "draft" ? `<span class="count">${blocks.length}</span>` : ""}<span class="spacer"></span><button class="btn sq" id="collapse" aria-label="Collapse review panel" aria-expanded="true">›</button></div><div class="body">${body}</div>`;
+  document.getElementById("collapse").onclick = () => { const pg = document.getElementById("page"); pg.classList.toggle("collapsed"); };
+}
+
+function renderAll() { renderGrid(); renderLabor(); renderChrome(); renderRail(); if (MODE === "empty") showEmpty(); }
+
+function showEmpty() {
+  const w = document.getElementById("gridwrap");
+  const d = document.createElement("div"); d.className = "empty"; d.setAttribute("role", "region"); d.setAttribute("aria-label", "Empty week");
+  d.innerHTML = `<h2>Nothing scheduled for Oct 5 – 11</h2><p>Start from something you already have, or click any cell to add shifts one at a time.</p>
+    <button class="opt main"><b>Copy last week</b><span class="go2">Copy</span><small>52 shifts, 358 h, from Sep 28 – Oct 4. Time off and availability are re-checked.</small></button>
+    <button class="opt"><b>Start from a template</b><span class="go2">Choose</span><small>“Downtown standard fall week”, 48 shifts, no names filled in.</small></button>`;
+  w.appendChild(d);
+}
+
+/* ---------- interactions ---------- */
+function closePops() { document.querySelectorAll(".pop, .ghost, .hint, .cursor").forEach(e => e.remove()); document.querySelectorAll(".s.sel").forEach(e => e.classList.remove("sel")); }
+function place(el, anchor, side = "right") {
+  const r = anchor.getBoundingClientRect(), sx = scrollX, sy = scrollY;
+  document.body.appendChild(el);
+  const w = el.offsetWidth, h = el.offsetHeight;
+  let x = side === "right" ? r.right + 10 : r.left - w - 10;
+  if (x + w > innerWidth - 8) x = r.left - w - 10;
+  if (x < 8) x = 8;
+  let y = r.top - 20; if (y + h > innerHeight - 8 && h < innerHeight) y = Math.max(8, innerHeight - h - 8);
+  el.style.left = x + sx + "px"; el.style.top = y + sy + "px";
+}
+function openPopover(id) {
+  closePops();
+  const s = SH.find(x => x.id === id), btn = document.querySelector(`.s[data-id="${id}"]`);
+  if (s.p === null) return openAssign(id);
+  btn.classList.add("sel");
+  const probs = problems().filter(p => p.ids.includes(id) || (p.type === "ot" && p.p === s.p));
+  const b = brk(s), mid = s.a + Math.floor(dur(s) / 2);
+  const el = document.createElement("div"); el.className = `pop ${s.pos}`; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Shift details");
+  const bad = probs.filter(p => p.k === "x" || p.k === "o"), warn = probs.filter(p => p.k === "w");
+  el.innerHTML = `<div class="ph"><div><span class="t">${fs(s)}</span><small>${PEOPLE[s.p].n}, ${LONG[s.d]} ${DAYS[s.d][2]} ${DAYS[s.d][1]}</small></div><button class="close" aria-label="Close">×</button></div>
+    <span class="tr" style="margin-top:10px"><span class="bar" style="left:${(s.a - DAY0) / SPAN * 100}%;width:${dur(s) / SPAN * 100}%"></span>${b ? `<span class="brk" style="left:${(mid - DAY0) / SPAN * 100}%"></span>` : ""}</span>
+    <dl><dt>Position</dt><dd><span style="display:inline-block;width:14px;height:6px;border-radius:3px;background:var(--c);margin-right:6px;vertical-align:1px"></span>${POS[s.pos]}</dd>
+    <dt>Break</dt><dd>${b ? `30 min unpaid, around ${f(mid)}` : "None (under 6 h)"}</dd>
+    <dt>Paid hours</dt><dd>${dur(s) - b} h at ${money2(PEOPLE[s.p].r)}/h = ${money2((dur(s) - b) * PEOPLE[s.p].r)}</dd>
+    <dt>Week so far</dt><dd class="hm" style="display:flex">${meter(hoursOf(s.p))}<span class="t">${hoursOf(s.p)} h</span></dd>
+    <dt>Notes</dt><dd>${s.note || `<span style="color:var(--muted-foreground)">None. Add a note staff will see.</span>`}</dd></dl>
+    ${bad.length ? `<div class="probs">${bad.map(p => `<div>${p.k === "o" ? `<i class="ic o">OT</i>` : `<i class="ic x">✕</i>`}<span><b>${p.title}.</b> ${p.text} Blocks publishing.</span></div>`).join("")}</div>` : ""}
+    ${warn.length ? `<div class="probs w">${warn.map(p => `<div><i class="ic w">!</i><span><b>${p.kept ? "Kept anyway" : p.title}.</b> ${p.kept ? st.kept[id] : p.text}</span></div>`).join("")}</div>` : ""}
+    <div class="acts"><button class="fixbtn primary">Edit</button><button class="fixbtn" data-act="assign" data-id="${id}">Reassign…</button><button class="fixbtn" data-act="open" data-id="${id}">Make open</button><button class="fixbtn danger" data-act="delete" data-id="${id}">Delete</button></div>`;
+  place(el, btn);
+  el.querySelector(".close").onclick = closePops;
+  return el;
+}
+function openAssign(id) {
+  closePops();
+  const s = SH.find(x => x.id === id), btn = document.querySelector(`.s[data-id="${id}"]`);
+  btn.classList.add("sel");
+  const { good, not } = candidates(s);
+  const el = document.createElement("div"); el.className = `pop assign ${s.pos}`; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Assign shift");
+  el.innerHTML = `<div class="ph"><div><span class="t">${s.p === null ? "Assign" : "Reassign"} ${fs(s)}</span><small>${POS[s.pos]}, ${LONG[s.d]} ${DAYS[s.d][2]} ${DAYS[s.d][1]}, ${dur(s)} h. Ranked by overtime, rest, then cost.</small></div><button class="close" aria-label="Close">×</button></div>
+    <ul class="cands">${good.slice(0, 4).map((c, k) => `<li class="cand"><span class="rk">${k + 1}</span><div><b>${PEOPLE[c.i].n}</b>
+      <div class="why2"><span>${c.main ? POS[s.pos] : "Trained on " + POS[s.pos]}</span><span>${c.sameDay ? `also works ${fs(c.sameDay)}` : "free all day"}</span>${c.otAdd ? `<span class="bad">+${c.otAdd} h overtime</span>` : `<span>no overtime</span>`}${c.restWarn ? `<span class="wn">! short rest</span>` : ""}</div></div>
+      <div class="right"><span class="cost">+${money2(c.cost)}</span><button class="fixbtn ${k === 0 ? "primary" : ""}" data-act="move" data-id="${id}" data-to="${c.i}">Assign</button></div>
+      <div class="hm">${meter(c.h, c.after)}<span class="t" style="min-width:auto">${c.h} → ${c.after} h</span></div></li>`).join("")}</ul>
+    <div class="notsug"><b>Not suggested:</b> ${not.map(([i, why]) => `${first(i)} (${why})`).join(", ")}.</div>
+    <div class="acts"><button class="fixbtn">Offer to everyone qualified</button><span style="color:var(--muted-foreground);font-size:12px;align-self:center">They’re notified in the app.</span></div>`;
+  place(el, btn);
+  el.querySelector(".close").onclick = closePops;
+  return el;
+}
+function showDrag() {
+  // static mid-drag frame: Omar's Sun 7:00–3:00 being dropped on Jordan
+  const src = SH.find(s => s.p === 10 && s.d === 6), to = 2;
+  document.querySelector(`.s[data-id="${src.id}"]`).classList.add("dragsrc");
+  PEOPLE.forEach((pp, i) => {
+    const cell = document.getElementById(`c-${i}-${src.d}`); if (!cell || i === src.p) return;
+    const av = AVAIL[i] && AVAIL[i][src.d], busy = SH.find(s => s.p === i && s.d === src.d && overlaps(s, src));
+    const off = TIMEOFF[i] && TIMEOFF[i].includes(src.d);
+    if (av || busy || off) { cell.classList.add("drop-no"); cell.insertAdjacentHTML("beforeend", `<span class="dropwhy"><span aria-hidden="true">⊘</span>${av ? "Unavailable" : off ? "Time off" : "Busy " + fs(busy)}</span>`); }
+    else cell.classList.add("drop-ok");
+  });
+  const tgt = document.getElementById(`c-${to}-${src.d}`); tgt.classList.add("drop-over");
+  const r = tgt.getBoundingClientRect();
+  const g = document.createElement("div"); g.className = "ghost stock";
+  g.innerHTML = `<span class="s" style="display:block"><span class="lbl"><b>${fs(src)}</b><span class="pos">Stock</span></span><span class="tr"><span class="bar" style="left:${(src.a - DAY0) / SPAN * 100}%;width:${dur(src) / SPAN * 100}%"></span></span></span>`;
+  g.style.left = r.left + scrollX - 40 + "px"; g.style.top = r.top + scrollY + 6 + "px"; document.body.appendChild(g);
+  const cur = document.createElement("div"); cur.className = "cursor"; cur.textContent = "✊"; cur.style.left = r.left + scrollX + 60 + "px"; cur.style.top = r.top + scrollY + 26 + "px"; document.body.appendChild(cur);
+  const hb = hoursOf(to), ha = hb + dur(src), pb = payFor(to, hb), pa = payFor(to, ha), otAdd = pa.otH - pb.otH;
+  const extra = pa.reg + pa.ot - pb.reg - pb.ot, saved = dur(src) * PEOPLE[src.p].r;
+  const h = document.createElement("div"); h.className = "hint"; h.setAttribute("role", "status");
+  h.innerHTML = `<b>Drop on ${PEOPLE[to].n}, Sun</b><br>${first(to)}: ${hb} h → ${ha} h, <span class="otx">+${otAdd} h overtime, +${money(pa.ot - pb.ot)} OT</span><br>${first(src.p)}: ${hoursOf(src.p)} h → ${hoursOf(src.p) - dur(src)} h. Net labor ${extra - saved >= 0 ? "+" : "−"}${money(Math.abs(extra - saved))}.<br><span style="opacity:.8">Blue cells are free. <kbd style="color:var(--foreground)">Esc</kbd> cancels.</span>`;
+  h.style.left = r.left + scrollX - 330 + "px"; h.style.top = r.top + scrollY - 10 + "px"; document.body.appendChild(h);
+  return { el: h, anchor: tgt };
+}
+function toast(t) { const d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "status"); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); }
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) { if (!e.target.closest(".pop")) closePops(); return; }
+  if (t.classList.contains("s") && t.dataset.id) { e.stopPropagation(); return openPopover(t.dataset.id); }
+  if (t.classList.contains("go")) {
+    const el = document.getElementById(t.dataset.target); if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    document.querySelectorAll(".hl").forEach(x => x.classList.remove("hl")); el.classList.add("hl"); el.setAttribute("tabindex", "-1"); el.focus({ preventScroll: true }); return;
+  }
+  if (t.classList.contains("chip")) { st.filter = t.dataset.f; document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === t)); return renderGrid(); }
+  if (t.id === "probs") { st.probs = !st.probs; t.setAttribute("aria-pressed", st.probs); return renderGrid(); }
+  if (t.id === "publish" && !t.disabled) { toast(MODE === "published" ? "Update sent. Luis was notified in the app." : "Published. 11 people were notified in the app."); return; }
+  const act = t.dataset.act; if (!act) return;
+  const s = t.dataset.id && SH.find(x => x.id === t.dataset.id);
+  if (act === "move") { const from = s.p; s.p = +t.dataset.to; toast(`Moved to ${first(s.p)}.${from !== null ? ` ${first(from)} is back to ${hoursOf(from)} h.` : ""}`); }
+  if (act === "open") { s.p = null; toast("Now an open shift. It’s offered to qualified staff when you publish."); }
+  if (act === "approve") { st.approved.add(+t.dataset.p); toast(`Overtime approved for ${first(+t.dataset.p)}.`); }
+  if (act === "start") { s.a = +t.dataset.h; toast(`Now starts at ${f(s.a)}.`); }
+  if (act === "extend") { s.b = +t.dataset.h; toast(`Extended to ${f(s.b)}.`); }
+  if (act === "delete") { SH = SH.filter(x => x !== s); toast("Shift deleted."); }
+  if (act === "assign") { return openAssign(t.dataset.id); }
+  if (act === "keep") {
+    const li = t.closest(".it"); if (li.querySelector(".keep")) return;
+    li.insertAdjacentHTML("beforeend", `<div class="keep"><input placeholder="Reason (staff won’t see this)" aria-label="Reason for keeping"><button class="fixbtn primary" data-act="keepok" data-id="${s.id}">Keep</button></div>`);
+    li.querySelector("input").focus(); return;
+  }
+  if (act === "keepok") { st.kept[s.id] = t.closest(".keep").querySelector("input").value || "No reason given"; }
+  closePops(); renderAll();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePops(); });
+document.getElementById("q").addEventListener("input", e => { st.q = e.target.value.toLowerCase().trim(); renderGrid(); });
+document.getElementById("theme").onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark"; };
+
+renderAll();
+// frames in states.html ask for a panel; report where it landed so the frame can crop to it
+document.fonts.ready.then(() => {
+  let target = null;
+  if (PANEL === "popover") { const s = SH.find(x => x.p === 4 && x.d === 2 && x.pos === "stock"); target = { el: openPopover(s.id), anchor: document.querySelector(`.s[data-id="${s.id}"]`) }; }
+  if (PANEL === "assign") { const s = SH.find(x => x.p === null && x.d === 6); target = { el: openAssign(s.id), anchor: document.querySelector(`.s[data-id="${s.id}"]`) }; }
+  if (PANEL === "drag") target = showDrag();
+  if (P.get("focus")) { const b = document.querySelector(`.s[data-id="${P.get("focus")}"]`); b && b.focus(); }
+  if (window.parent !== window) {
+    const rr = e => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
+    const box = target ? (() => { const a = rr(target.el), c = rr(target.anchor); return { l: Math.min(a.l, c.l), r: Math.max(a.r, c.r), t: Math.min(a.t, c.t), b: Math.max(a.b, c.b), pt: a.t, pb: a.b }; })() : null;
+    parent.postMessage({ frame: P.get("frame"), box, h: document.documentElement.scrollHeight }, "*");
+  }
+});
+</script>
+</body>
+</html>

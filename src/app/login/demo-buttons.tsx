@@ -32,7 +32,7 @@ export function DemoButtons() {
                 }
               });
             }}
-            className="flex items-center gap-3 rounded-lg border bg-card p-3 text-left transition hover:border-primary/60 hover:bg-primary/5 disabled:opacity-60"
+            className="flex items-center gap-3 rounded-md border bg-card p-3 text-left transition-colors hover:border-primary/60 hover:bg-accent/50 active:translate-y-px disabled:opacity-60"
           >
             <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
               {pending && which === d.role ? <Loader2 className="size-4 animate-spin" /> : <Icon className="size-4" />}

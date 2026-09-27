@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShiftMate · Shelf Edge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --background: #F2F5F8;
+  --foreground: #14213D;
+  --card: #FFFFFF;
+  --card-foreground: #14213D;
+  --primary: #14213D;
+  --primary-foreground: #FFFFFF;
+  --muted: #E4E9F0;
+  --muted-foreground: #4A5A73;
+  --accent: #FFC61A;
+  --accent-foreground: #14213D;
+  --border: #CBD4DF;
+  --ring: #2563C9;
+  --destructive: #C42B2B;
+  --pos-cashier: #2563C9;
+  --pos-stock: #7C4DDB;
+  --pos-floor: #0B8566;
+  --pos-supervisor: #3B4A66;
+  --warning: #9A5B00;
+  --warning-bg: #FFF1CC;
+  --danger: #C42B2B;
+  --danger-bg: #FDE6E6;
+  --overtime: #B0206F;
+  --overtime-bg: #FBE3F0;
+  --rail: #14213D;
+  --rail-foreground: #D6DEEA;
+  --tint: 11%;
+}
+[data-theme="dark"] {
+  --background: #0C1424;
+  --foreground: #E6ECF5;
+  --card: #131F36;
+  --card-foreground: #E6ECF5;
+  --primary: #FFC61A;
+  --primary-foreground: #14213D;
+  --muted: #1A2843;
+  --muted-foreground: #9EADC7;
+  --accent: #FFC61A;
+  --accent-foreground: #14213D;
+  --border: #2A3B5E;
+  --ring: #7FA8F7;
+  --destructive: #F47272;
+  --pos-cashier: #74A3F7;
+  --pos-stock: #AD8CF4;
+  --pos-floor: #3CC79E;
+  --pos-supervisor: #A9B8D6;
+  --warning: #F4B63F;
+  --warning-bg: #3A2A0A;
+  --danger: #F47272;
+  --danger-bg: #3D1519;
+  --overtime: #F27CC0;
+  --overtime-bg: #3A1530;
+  --rail: #08101E;
+  --rail-foreground: #B9C6DB;
+  --tint: 20%;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--background); color: var(--foreground);
+  font-family: "Archivo", system-ui, sans-serif; font-size: 13px; line-height: 1.35;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.rail { position: sticky; top: 0; height: 100vh; }
+.app { display: grid; grid-template-columns: 208px 1fr; min-height: 100vh; }
+
+/* rail */
+.rail { background: var(--rail); color: var(--rail-foreground); padding: 18px 14px; display: flex; flex-direction: column; gap: 18px; }
+.mark { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 17px; color: #fff; font-stretch: 112%; letter-spacing: -0.01em; }
+.mark i { width: 22px; height: 16px; background: #FFC61A; border-radius: 2px; position: relative; display: block; }
+.mark i::after { content: ""; position: absolute; left: 4px; top: 6px; width: 4px; height: 4px; border-radius: 50%; background: var(--rail); }
+.store { border: 1px solid rgba(255,255,255,.14); border-radius: 6px; padding: 8px 10px; background: rgba(255,255,255,.04); text-align: left; width: 100%; }
+.store small { display: block; color: #8FA0BD; font-size: 11px; }
+.store b { color: #fff; font-weight: 600; font-size: 13px; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav a { color: inherit; text-decoration: none; padding: 7px 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+.nav a:hover { background: rgba(255,255,255,.06); }
+.nav a[aria-current] { background: rgba(255,198,26,.14); color: #fff; box-shadow: inset 3px 0 0 #FFC61A; }
+.nav .count { background: #FFC61A; color: #14213D; font-weight: 700; font-size: 11px; border-radius: 3px; padding: 0 5px; }
+.me { margin-top: auto; display: flex; gap: 9px; align-items: center; font-size: 12px; }
+.me .av { width: 30px; height: 30px; border-radius: 50%; background: #2A3B5E; display: grid; place-items: center; color: #fff; font-weight: 600; }
+.me small { display: block; color: #8FA0BD; }
+
+/* main */
+main { padding: 16px 24px 24px; min-width: 0; }
+.top { display: flex; align-items: center; gap: 14px; }
+.top h1 { font-size: 22px; font-weight: 750; font-stretch: 115%; margin: 0; letter-spacing: -0.015em; }
+.top .range { color: var(--muted-foreground); font-size: 13px; }
+.stepper { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; background: var(--card); }
+.stepper button { border: 0; background: none; padding: 5px 10px; }
+.stepper button + button { border-left: 1px solid var(--border); }
+.spacer { flex: 1; }
+.btn { border: 1px solid var(--border); background: var(--card); border-radius: 4px; padding: 6px 12px; font-weight: 600; }
+.theme { width: 34px; padding: 6px 0; }
+.publish { background: var(--accent); color: var(--accent-foreground); border: 0; font-weight: 750; font-stretch: 110%; padding: 8px 16px; border-radius: 4px; }
+.publish { box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 55%, #000); }
+.state { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; color: var(--warning); }
+.state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+/* draft banner = shelf tag strip */
+.draft { margin-top: 12px; display: flex; align-items: center; gap: 16px; background: var(--warning-bg); border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); border-left: 6px solid var(--accent); border-radius: 4px; padding: 8px 14px; }
+.draft p { margin: 0; }
+.draft .checks { display: flex; gap: 14px; margin-left: auto; }
+.chk { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.chk.block { color: var(--danger); } .chk.ot { color: var(--overtime); } .chk.open { color: var(--foreground); }
+
+/* labor strip: shelf edge with price tags */
+.labor { margin-top: 12px; display: grid; grid-template-columns: repeat(4, auto) 1fr; gap: 0; background: var(--card); border: 1px solid var(--border); border-radius: 4px; border-bottom: 3px solid var(--foreground); }
+.labor > div { padding: 8px 18px; border-right: 1px solid var(--border); }
+.labor small { color: var(--muted-foreground); display: block; font-size: 11.5px; }
+.labor .num { font-size: 22px; font-weight: 750; font-stretch: 125%; letter-spacing: -0.02em; line-height: 1.1; }
+.labor .num sup { font-size: 12px; font-weight: 700; vertical-align: 8px; margin-right: 1px; }
+.labor .ot .num { color: var(--overtime); }
+.budget { display: flex; flex-direction: column; justify-content: center; gap: 5px; border-right: 0 !important; }
+.bar { height: 8px; background: var(--muted); border-radius: 2px; position: relative; overflow: hidden; }
+.bar b { position: absolute; inset: 0 auto 0 0; background: var(--foreground); }
+.bar em { position: absolute; top: 0; bottom: 0; background: var(--overtime); }
+.budget .row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted-foreground); }
+
+/* grid */
+.gridwrap { margin-top: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; overflow: auto; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+col.who { width: 196px; }
+th, td { border-bottom: 1px solid var(--border); padding: 0; vertical-align: top; }
+td + td, th + th { border-left: 1px solid var(--border); }
+thead th { position: sticky; top: 0; background: var(--card); z-index: 1; text-align: left; font-weight: 600; padding: 6px 8px; border-bottom: 2px solid var(--foreground); }
+thead th .d { font-size: 16px; font-weight: 750; font-stretch: 120%; margin-left: 4px; }
+thead th small { display: block; color: var(--muted-foreground); font-weight: 400; font-size: 11px; }
+thead th.wk { background: var(--muted); }
+.who { padding: 6px 10px; }
+.who .nm { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.who .nm i { width: 8px; height: 8px; border-radius: 1px; flex: none; }
+.who .meta { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted-foreground); font-size: 11.5px; margin-top: 1px; }
+.hrs { font-weight: 700; color: var(--foreground); font-stretch: 115%; }
+.hrs.over { color: var(--overtime); }
+.otchip { font-size: 11px; font-weight: 700; color: var(--overtime); background: var(--overtime-bg); border-radius: 2px; padding: 0 4px; margin-left: 4px; }
+tr.otrow td.who { box-shadow: inset 4px 0 0 var(--overtime); }
+tr.otrow .approve { color: var(--overtime); font-weight: 600; background: none; border: 0; padding: 0; text-decoration: underline; font-size: 11.5px; text-underline-offset: 2px; }
+td.cell { padding: 4px; height: 50px; }
+td.cell.weekend { background: color-mix(in srgb, var(--muted) 45%, transparent); }
+td.cell.conflict { background: var(--danger-bg); }
+.blk { display: block; width: 100%; text-align: left; border: 0; border-radius: 2px; padding: 3px 6px 3px 8px; background: color-mix(in srgb, var(--c) var(--tint), var(--card)); box-shadow: inset 4px 0 0 var(--c); color: var(--foreground); }
+.blk + .blk { margin-top: 3px; }
+.blk .t { font-weight: 750; font-stretch: 118%; font-size: 13.5px; letter-spacing: -0.01em; }
+.blk .t small { font-size: 10.5px; font-weight: 600; margin-left: 1px; }
+.blk .p { font-size: 11.5px; color: var(--muted-foreground); display: flex; justify-content: space-between; gap: 4px; }
+.blk.warn { box-shadow: inset 4px 0 0 var(--c), inset 0 0 0 1.5px var(--warning); }
+.blk.bad { box-shadow: inset 4px 0 0 var(--c), inset 0 0 0 2px var(--danger); }
+.flag { font-weight: 700; font-size: 11px; white-space: nowrap; }
+.flag.w { color: var(--warning); } .flag.x { color: var(--danger); }
+.off { height: 100%; min-height: 40px; border-radius: 2px; display: grid; place-items: center; color: var(--muted-foreground); font-size: 11.5px; font-weight: 600;
+  background: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--muted-foreground) 16%, transparent) 6px 7px); }
+tr.open td { background: color-mix(in srgb, var(--accent) 9%, var(--card)); }
+tr.open .who .nm { font-weight: 700; }
+.blk.openblk { background: transparent; box-shadow: none; outline: 1.5px dashed var(--c); outline-offset: -1.5px; }
+.blk.openblk .p b { color: var(--foreground); text-decoration: underline; text-underline-offset: 2px; }
+.legend { display: flex; gap: 16px; align-items: center; margin-top: 10px; color: var(--muted-foreground); font-size: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 1px; }
+.legend .x { width: 12px; height: 12px; border: 2px solid var(--danger); border-radius: 2px; }
+.legend .w { width: 12px; height: 12px; border: 1.5px solid var(--warning); border-radius: 2px; }
+.cash { --c: var(--pos-cashier); } .stock { --c: var(--pos-stock); } .floor { --c: var(--pos-floor); } .sup { --c: var(--pos-supervisor); }
+@media (max-width: 1320px) { .app { grid-template-columns: 184px 1fr; } main { padding: 14px 16px; } col.who { width: 176px; } .labor > div { padding: 8px 12px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Main">
+    <div class="mark"><i></i>ShiftMate</div>
+    <button class="store"><small>Northwind Goods</small><b>Downtown ▾</b></button>
+    <div class="nav">
+      <a href="#" aria-current="page">Schedule</a>
+      <a href="#">Team</a>
+      <a href="#">Availability</a>
+      <a href="#">Time off <span class="count">2</span></a>
+      <a href="#">Swap requests <span class="count">1</span></a>
+      <a href="#">Labor reports</a>
+      <a href="#">Store settings</a>
+    </div>
+    <div class="me"><span class="av">DW</span><div>Dana Whitfield<small>Store manager</small></div></div>
+  </nav>
+  <main>
+    <div class="top">
+      <h1>Downtown schedule</h1>
+      <div class="stepper"><button aria-label="Previous week">‹</button><button>This week</button><button aria-label="Next week">›</button></div>
+      <span class="range">Mon Sep 28 – Sun Oct 4, 2026</span>
+      <span class="spacer"></span>
+      <span class="state">Draft</span>
+      <button class="btn">Copy last week</button>
+      <button class="btn theme" id="theme" aria-label="Switch light or dark">◐</button>
+      <button class="publish" title="Opens the publish checklist">Publish week</button>
+    </div>
+    <div class="draft" role="status">
+      <p><b>Staff can’t see this week yet.</b> Publish sends it to 11 people by text and email.</p>
+      <div class="checks">
+        <button class="chk block">1 double-booking to fix</button>
+        <button class="chk ot">1 overtime to approve</button>
+        <button class="chk open">3 open shifts</button>
+      </div>
+    </div>
+    <section class="labor" id="labor" aria-label="Labor cost"></section>
+    <div class="gridwrap"><table id="grid"></table></div>
+    <div class="legend">
+      <span><i style="background:var(--pos-cashier)"></i>Cashier</span>
+      <span><i style="background:var(--pos-stock)"></i>Stock</span>
+      <span><i style="background:var(--pos-floor)"></i>Floor</span>
+      <span><i style="background:var(--pos-supervisor)"></i>Supervisor</span>
+      <span style="margin-left:12px"><b class="x"></b>Blocks publishing</span>
+      <span><b class="w"></b>Check before publishing</span>
+    </div>
+  </main>
+</div>
+<script>
+const DAYS = [["Mon","28","Sep"],["Tue","29",""],["Wed","30",""],["Thu","1","Oct"],["Fri","2",""],["Sat","3",""],["Sun","4",""]];
+const POS = { cash: "Cashier", stock: "Stock", floor: "Floor", sup: "Supervisor" };
+const PEOPLE = [
+  { n: "Marcus Bell", p: "sup", r: 24.5 },
+  { n: "Priya Raman", p: "cash", r: 17 },
+  { n: "Jordan Ellis", p: "stock", r: 18.25 },
+  { n: "Sofia Alvarez", p: "floor", r: 17.5 },
+  { n: "Tyler Brooks", p: "cash", r: 16.75 },
+  { n: "Aisha Khan", p: "floor", r: 17.25 },
+  { n: "Ben Okafor", p: "stock", r: 17.75 },
+  { n: "Hannah Lee", p: "cash", r: 16.5 },
+  { n: "Luis Moreno", p: "floor", r: 17 },
+  { n: "Grace Chen", p: "cash", r: 16.5 },
+  { n: "Omar Haddad", p: "stock", r: 17.25 },
+];
+// [person, day, start, end, position, flag, note]
+const SHIFTS = [
+  [0,0,8,16,"sup"],[0,1,8,16,"sup"],[0,2,8,16,"sup"],[0,3,12,18,"sup"],[0,5,9,17,"sup"],
+  [1,0,9,17,"cash"],[1,1,9,17,"cash"],[1,3,15,21,"cash"],[1,4,15,21,"cash"],[1,5,10,18,"cash"],
+  [2,0,6,14,"stock"],[2,1,6,14,"stock"],[2,2,6,14,"stock"],[2,3,6,14,"stock"],[2,4,6,14,"stock"],[2,5,6,10,"stock"],
+  [3,1,12,20,"floor"],[3,2,12,20,"floor"],[3,4,10,18,"floor"],[3,5,12,20,"floor"],[3,6,11,17,"floor"],
+  [4,0,15,21,"cash"],[4,2,9,17,"cash","bad","Double-booked"],[4,2,13,19,"stock","bad","Overlap"],[4,4,9,15,"cash"],[4,6,10,18,"cash"],
+  [5,0,12,20,"floor"],[5,3,9,15,"floor","warn","Unavailable"],[5,5,9,17,"floor"],[5,6,12,18,"floor"],
+  [6,1,14,22,"stock"],[6,2,14,22,"stock"],[6,4,14,22,"stock"],[6,5,6,12,"stock","warn","Short rest"],
+  [7,0,10,16,"cash"],[7,1,15,21,"cash"],[7,2,15,21,"cash"],[7,3,9,15,"cash"],
+  [8,0,9,17,"floor"],[8,2,9,17,"floor"],[8,3,12,20,"floor"],[8,4,12,20,"floor"],[8,6,9,15,"floor"],
+  [9,3,17,21,"cash"],[9,5,13,21,"cash"],[9,6,12,16,"cash"],
+  [10,0,14,22,"stock"],[10,3,14,22,"stock"],[10,5,12,20,"stock"],[10,6,7,15,"stock"],
+];
+const OPEN = [[4,17,22,"stock"],[5,12,20,"floor"],[6,10,18,"cash"]];
+const TIMEOFF = { 7: [4,5] };
+const CLS = { cash: "cash", stock: "stock", floor: "floor", sup: "sup" };
+
+const t = h => { const hh = h % 12 || 12; return `${hh}<small>${h < 12 ? "a" : "p"}</small>`; };
+const hoursOf = i => SHIFTS.filter(s => s[0] === i).reduce((a, s) => a + s[3] - s[2], 0);
+const money = v => "$" + Math.round(v).toLocaleString("en-US");
+
+function blk(s, open) {
+  const [, , a, b, p, flag, note] = s;
+  const f = flag === "bad" ? `<span class="flag x">● ${note}</span>` : flag === "warn" ? `<span class="flag w">▲ ${note}</span>` : "";
+  const right = open ? `<b>Assign</b>` : "";
+  const tip = { "Double-booked": "Tyler is double-booked: Cashier 9a–5p and Stock 1p–7p", "Overlap": "Tyler is double-booked: Cashier 9a–5p and Stock 1p–7p", "Unavailable": "Aisha is unavailable Thursdays before 12p", "Short rest": "Ben closes Fri at 10p and opens Sat at 6a: 8 h rest" }[note] || "";
+  return `<button title="${tip}" class="blk ${CLS[p]} ${flag || ""} ${open ? "openblk" : ""}">
+    <div class="t">${t(a)}–${t(b)}</div>
+    <div class="p"><span>${POS[p]}</span>${right}</div>${f ? `<div>${f}</div>` : ""}</button>`;
+}
+
+let reg = 0, ot = 0, total = 0;
+const rows = PEOPLE.map((person, i) => {
+  const h = hoursOf(i), over = Math.max(0, h - 40);
+  total += h; reg += (h - over) * person.r; ot += over * person.r * 1.5;
+  const cells = DAYS.map((d, di) => {
+    if (TIMEOFF[i] && TIMEOFF[i].includes(di)) return `<td class="cell"><div class="off">Time off</div></td>`;
+    const ss = SHIFTS.filter(s => s[0] === i && s[1] === di);
+    const bad = ss.some(s => s[5] === "bad");
+    return `<td class="cell ${di > 4 ? "weekend" : ""} ${bad ? "conflict" : ""}">${ss.map(s => blk(s)).join("")}</td>`;
+  }).join("");
+  const hrs = `<span class="hrs ${over ? "over" : ""}">${h} h${over ? `<span class="otchip">+${over} OT</span>` : ""}</span>`;
+  const sub = over ? `<button class="approve">Approve OT</button>` : `<span>${POS[person.p]} · $${person.r.toFixed(2)}</span>`;
+  return `<tr class="${over ? "otrow" : ""}"><td class="who"><div class="nm"><i style="background:var(--pos-${person.p === "cash" ? "cashier" : person.p === "sup" ? "supervisor" : person.p})"></i>${person.n}</div><div class="meta">${sub}${hrs}</div></td>${cells}</tr>`;
+}).join("");
+
+const openRow = `<tr class="open"><td class="who"><div class="nm">Open shifts</div><div class="meta"><span>Anyone qualified can claim</span><span class="hrs">3</span></div></td>${
+  DAYS.map((d, di) => { const o = OPEN.filter(x => x[0] === di); return `<td class="cell ${di > 4 ? "weekend" : ""}">${o.map(x => blk([null, di, x[1], x[2], x[3]], true)).join("")}</td>`; }).join("")}</tr>`;
+
+const dayHours = DAYS.map((d, di) => SHIFTS.filter(s => s[1] === di).reduce((a, s) => a + s[3] - s[2], 0));
+document.getElementById("grid").innerHTML =
+  `<colgroup><col class="who">${DAYS.map(() => "<col>").join("")}</colgroup>
+   <thead><tr><th class="wk">Team <small>11 people · sorted by role</small></th>${DAYS.map((d, di) => `<th>${d[0]}<span class="d">${d[1]}</span><small>${dayHours[di]} h scheduled</small></th>`).join("")}</tr></thead>
+   <tbody>${openRow}${rows}</tbody>`;
+
+const budget = 7400, spend = reg + ot;
+document.getElementById("labor").innerHTML = `
+  <div><small>Scheduled hours</small><div class="num">${total}<span style="font-size:13px;font-weight:600"> h</span></div></div>
+  <div><small>Regular pay</small><div class="num"><sup>$</sup>${Math.round(reg).toLocaleString("en-US")}</div></div>
+  <div class="ot"><small>Overtime pay · 4 h at 1.5×</small><div class="num"><sup>$</sup>${Math.round(ot).toLocaleString("en-US")}</div></div>
+  <div><small>Total labor</small><div class="num"><sup>$</sup>${Math.round(spend).toLocaleString("en-US")}</div></div>
+  <div class="budget"><div class="row"><span>Weekly labor budget ${money(budget)}</span><b style="color:var(--foreground)">${money(budget - spend)} left</b></div>
+    <div class="bar"><b style="width:${reg / budget * 100}%"></b><em style="left:${reg / budget * 100}%;width:${ot / budget * 100}%"></em></div>
+    <div class="row"><span>${Math.round(spend / budget * 100)}% of budget used</span><span>Sales forecast $41,200 · labor ${(spend / 41200 * 100).toFixed(1)}% of sales</span></div></div>`;
+
+const root = document.documentElement;
+const q = new URLSearchParams(location.search).get("theme");
+if (q) root.dataset.theme = q;
+document.getElementById("theme").onclick = () => root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+</script>
+</body>
+</html>

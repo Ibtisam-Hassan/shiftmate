@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShiftMate · Stockroom · My shifts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Big+Shoulders+Stencil+Display:wght@800&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --background: #EDE3D3; --foreground: #241C14; --card: #FFFFFF; --primary: #7A4B1E; --primary-foreground: #fff; --muted: #F6F0E6; --muted-foreground: #66563F; --border: #DDCDB5; --ring: #1D5FB4; --pos-cashier: #1D5FB4; --warning: #855400; --warning-bg: #FCEAB8; --kraft: #C9A57A; --kraft-foreground: #241C14; --track: #EFE6D8; }
+[data-theme="dark"] { --background: #16110C; --foreground: #F1E8DC; --card: #211A13; --primary: #E2B87F; --primary-foreground: #241C14; --muted: #2A2219; --muted-foreground: #BFAE97; --border: #3E3226; --ring: #7EB0F2; --pos-cashier: #72A8F0; --warning: #F2C35A; --warning-bg: #3A2B0C; --kraft: #4A3824; --kraft-foreground: #F4E6D2; --track: #2E251B; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: "Libre Franklin", system-ui, sans-serif; font-size: 15px; line-height: 1.4; font-variant-numeric: tabular-nums lining-nums; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.disp { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; }
+header { background: var(--kraft); color: var(--kraft-foreground); padding: 12px 16px 16px; }
+.bar { display: flex; justify-content: space-between; align-items: center; }
+.mark { font-family: "Big Shoulders Stencil Display", sans-serif; font-weight: 800; font-size: 24px; }
+.theme { border: 1px solid color-mix(in srgb, var(--kraft-foreground) 30%, transparent); background: none; border-radius: 6px; width: 34px; height: 30px; }
+h1 { margin: 10px 0 0; font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 40px; line-height: .95; }
+header p { margin: 4px 0 0; font-size: 14px; }
+main { padding: 14px 16px 92px; display: flex; flex-direction: column; gap: 18px; }
+h2 { margin: 0 0 6px; font-size: 15px; font-weight: 700; display: flex; justify-content: space-between; }
+h2 span { font-weight: 500; color: var(--muted-foreground); font-size: 13px; }
+.sheet { background: var(--card); border-radius: 3px; box-shadow: 0 1px 0 rgba(90,60,30,.18), 0 0 0 1px var(--border); }
+.sh { display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.sh:last-child { border-bottom: 0; }
+.dn { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 30px; line-height: .9; text-align: center; }
+.dn small { display: block; font-family: "Libre Franklin", sans-serif; font-size: 12px; font-weight: 600; color: var(--muted-foreground); margin-top: 3px; }
+.lbl { display: flex; justify-content: space-between; }
+.lbl b { font-weight: 700; }
+.lbl span { color: var(--muted-foreground); font-size: 13.5px; }
+.tr { height: 8px; border-radius: 4px; background: var(--track); position: relative; margin: 6px 0 3px; }
+.tr i { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--pos-cashier); }
+.sh.swap .tr i { background: repeating-linear-gradient(-45deg, var(--pos-cashier) 0 5px, var(--warning) 5px 8px); }
+.ax { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted-foreground); }
+.note { font-size: 13px; color: var(--muted-foreground); }
+.sh.swap .note { color: var(--warning); font-weight: 600; }
+.card { background: var(--card); border-radius: 3px; box-shadow: 0 0 0 1px var(--border); padding: 12px 14px 12px 24px; position: relative; overflow: hidden; }
+.card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: repeating-linear-gradient(-45deg, #E8B400 0 5px, #241C14 5px 10px); }
+.card .st { font-weight: 700; color: var(--warning); font-size: 13px; }
+.card p { margin: 4px 0 10px; }
+.card p:last-child { margin-bottom: 0; }
+.btn { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-weight: 600; font-size: 14px; }
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; background: var(--kraft); color: var(--kraft-foreground); display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 6px 16px; }
+.tabs a { color: inherit; text-decoration: none; text-align: center; font-size: 12.5px; font-weight: 600; padding: 6px 0; border-radius: 6px; }
+.tabs a[aria-current] { background: var(--card); color: var(--foreground); }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar"><span class="mark">ShiftMate</span><button class="theme" id="theme" aria-label="Switch light or dark">◐</button></div>
+  <h1>Priya’s week</h1>
+  <p>5 shifts, 36 h at Downtown. Next up: tomorrow at 9:00.</p>
+</header>
+<main>
+  <section>
+    <h2>Sep 28 to Oct 4 <span>6a to 11p</span></h2>
+    <div class="sheet">
+      <div class="sh"><div class="dn">28<small>Mon</small></div><div><div class="lbl"><b>9:00–5:00</b><span>Cashier · 8 h</span></div><div class="tr"><i style="left:17.6%;width:47.1%"></i></div><div class="note">Opening with Marcus and Luis</div></div></div>
+      <div class="sh"><div class="dn">29<small>Tue</small></div><div><div class="lbl"><b>9:00–5:00</b><span>Cashier · 8 h</span></div><div class="tr"><i style="left:17.6%;width:47.1%"></i></div><div class="note">With Sofia and Marcus</div></div></div>
+      <div class="sh"><div class="dn">1<small>Thu</small></div><div><div class="lbl"><b>3:00–9:00</b><span>Cashier · 6 h</span></div><div class="tr"><i style="left:52.9%;width:35.3%"></i></div><div class="note">Closing shift</div></div></div>
+      <div class="sh swap"><div class="dn">2<small>Fri</small></div><div><div class="lbl"><b>3:00–9:00</b><span>Cashier · 6 h</span></div><div class="tr"><i style="left:52.9%;width:35.3%"></i></div><div class="note">Swap to Grace pending</div></div></div>
+      <div class="sh"><div class="dn">3<small>Sat</small></div><div><div class="lbl"><b>10:00–6:00</b><span>Cashier · 8 h</span></div><div class="tr"><i style="left:23.5%;width:47.1%"></i></div><div class="note">With Grace and Aisha</div></div></div>
+    </div>
+  </section>
+  <section>
+    <h2>Swap request</h2>
+    <div class="card">
+      <div class="st">Waiting for Dana to approve</div>
+      <p><b>Fri Oct 2, 3:00–9:00</b> to Grace Chen. Grace accepted on Saturday.</p>
+      <button class="btn">Cancel swap</button>
+    </div>
+  </section>
+  <section>
+    <h2>Time off</h2>
+    <div class="card">
+      <div class="st">Pending</div>
+      <p><b>Sat Oct 10 to Sun Oct 11</b>, family wedding. Sent Sep 24.</p>
+    </div>
+  </section>
+</main>
+<nav class="tabs" aria-label="Main"><a href="#" aria-current="page">My shifts</a><a href="#">Open shifts</a><a href="#">Swaps</a><a href="#">Time off</a></nav>
+<script>
+const r = document.documentElement, q = new URLSearchParams(location.search).get("theme");
+if (q) r.dataset.theme = q;
+document.getElementById("theme").onclick = () => r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark";
+</script>
+</body>
+</html>

@@ -76,3 +76,12 @@ export function minutesBetween(start: Date, end: Date): number {
 export function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
   return aStart < bEnd && bStart < aEnd;
 }
+
+/** Prisma returns `@db.Date` columns as UTC-midnight Dates. */
+export function fromDbDate(d: Date): LocalDate {
+  return d.toISOString().slice(0, 10);
+}
+
+export function toDbDate(date: LocalDate): Date {
+  return new Date(`${date}T00:00:00.000Z`);
+}

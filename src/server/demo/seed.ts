@@ -8,16 +8,16 @@ const TZ = "America/Chicago";
 const WEEK_STARTS_ON = 1;
 
 const STORES = [
-  { key: "downtown", name: "Downtown", address: "120 N State St, Chicago, IL" },
-  { key: "riverside", name: "Riverside", address: "44 E Burlington St, Riverside, IL" },
-  { key: "oakpark", name: "Oak Park", address: "1010 Lake St, Oak Park, IL" },
+  { key: "downtown", name: "Downtown", address: "120 N State St, Chicago, IL", budget: 740000 },
+  { key: "riverside", name: "Riverside", address: "44 E Burlington St, Riverside, IL", budget: 620000 },
+  { key: "oakpark", name: "Oak Park", address: "1010 Lake St, Oak Park, IL", budget: 600000 },
 ] as const;
 
 const POSITIONS = [
-  { name: "Cashier", color: "teal" },
-  { name: "Stock", color: "amber" },
-  { name: "Floor", color: "sky" },
-  { name: "Supervisor", color: "violet" },
+  { name: "Cashier", color: "cashier" },
+  { name: "Stock", color: "stock" },
+  { name: "Floor", color: "floor" },
+  { name: "Supervisor", color: "supervisor" },
 ] as const;
 
 const FIRST = ["Maya", "Omar", "Priya", "Diego", "Hana", "Liam", "Zara", "Noah", "Aisha", "Ethan", "Sofia", "Kai",
@@ -78,7 +78,7 @@ export async function resetDemoData(db: PrismaClient, opts: { now?: Date; adminE
   const org = await db.organization.create({ data: { name: "Northwind Goods" } });
   const stores: { key: string; name: string; id: string; positions: Record<string, string> }[] = [];
   for (const s of STORES) {
-    const loc = await db.location.create({ data: { orgId: org.id, name: s.name, timezone: TZ, address: s.address } });
+    const loc = await db.location.create({ data: { orgId: org.id, name: s.name, timezone: TZ, address: s.address, weeklyBudgetCents: s.budget } });
     const positions = Object.fromEntries(
       await Promise.all(
         POSITIONS.map(async (p) => [p.name, (await db.position.create({ data: { locationId: loc.id, ...p } })).id] as const),

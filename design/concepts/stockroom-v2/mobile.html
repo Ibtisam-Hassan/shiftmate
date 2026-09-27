@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ShiftMate · Stockroom v2 · My shifts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Big+Shoulders+Stencil+Display:wght@800&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --background: #EDE3D3; --foreground: #241C14; --card: #FFFFFF; --primary: #7A4B1E; --primary-foreground: #FFFFFF; --muted: #F6F0E6; --muted-foreground: #66563F; --border: #DDCDB5; --ring: #1D5FB4; --pos-cashier: #1D5FB4; --warning: #855400; --warning-bg: #FCEAB8; --danger: #B3122B; --kraft: #C9A57A; --kraft-foreground: #241C14; --track: #EFE6D8; }
+[data-theme="dark"] { --background: #16110C; --foreground: #F1E8DC; --card: #211A13; --primary: #E2B87F; --primary-foreground: #241C14; --muted: #2A2219; --muted-foreground: #BFAE97; --border: #3E3226; --ring: #7EB0F2; --pos-cashier: #72A8F0; --warning: #F2C35A; --warning-bg: #3A2B0C; --danger: #F27E88; --kraft: #4A3824; --kraft-foreground: #F4E6D2; --track: #2E251B; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: "Libre Franklin", system-ui, sans-serif; font-size: 15px; line-height: 1.4; font-variant-numeric: tabular-nums lining-nums; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.big { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; }
+header { background: var(--kraft); color: var(--kraft-foreground); padding: 8px 16px 18px; }
+.bar { display: flex; align-items: center; gap: 4px; }
+.mark { font-family: "Big Shoulders Stencil Display", sans-serif; font-weight: 800; font-size: 24px; margin-right: auto; }
+.icon { width: 44px; height: 44px; border: 0; background: none; border-radius: 8px; display: grid; place-items: center; position: relative; }
+.icon svg { width: 22px; height: 22px; }
+.icon .dot { position: absolute; top: 6px; right: 6px; background: var(--danger); color: #fff; border-radius: 9px; font-size: 10px; font-weight: 700; padding: 0 5px; line-height: 16px; }
+.when { margin: 10px 0 0; font-size: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: baseline; }
+.count { font-size: 13px; font-weight: 600; background: var(--kraft-foreground); color: var(--kraft); border-radius: 12px; padding: 2px 9px; }
+.time { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 64px; line-height: .9; margin: 4px 0 6px; }
+.where { font-size: 14px; }
+.where b { font-weight: 700; }
+.htrack { height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--kraft-foreground) 14%, transparent); position: relative; margin: 12px 0 3px; }
+.htrack i { position: absolute; top: 0; bottom: 0; left: 17.6%; width: 47.1%; border-radius: 5px; background: var(--kraft-foreground); }
+.hax { display: flex; justify-content: space-between; font-size: 11px; opacity: .8; }
+.hacts { display: flex; gap: 8px; margin-top: 14px; }
+.hbtn { flex: 1; min-height: 44px; border-radius: 8px; border: 1.5px solid var(--kraft-foreground); background: none; font-weight: 700; font-size: 14px; }
+.hbtn.solid { background: var(--kraft-foreground); color: var(--kraft); }
+main { padding: 16px 16px 104px; display: flex; flex-direction: column; gap: 20px; }
+h2 { margin: 0 0 8px; font-size: 16px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; }
+h2 span { font-weight: 500; color: var(--muted-foreground); font-size: 13px; }
+.sheet { background: var(--card); border-radius: 4px; box-shadow: 0 1px 0 rgba(90,60,30,.18), 0 0 0 1px var(--border); }
+.sh { display: grid; grid-template-columns: 44px 1fr 20px; gap: 12px; align-items: center; padding: 10px 12px 10px 14px; border-bottom: 1px solid var(--border); min-height: 64px; width: 100%; text-align: left; border-left: 0; border-right: 0; border-top: 0; background: none; }
+.sh:last-child { border-bottom: 0; }
+.dn { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 30px; line-height: .9; text-align: center; }
+.dn small { display: block; font-family: "Libre Franklin", sans-serif; font-size: 12px; font-weight: 600; color: var(--muted-foreground); margin-top: 3px; }
+.lbl { display: flex; justify-content: space-between; gap: 8px; }
+.lbl b { font-weight: 700; }
+.lbl span { color: var(--muted-foreground); font-size: 13.5px; }
+.tr { height: 8px; border-radius: 4px; background: var(--track); position: relative; margin: 6px 0 3px; }
+.tr i { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--pos-cashier); }
+.sh.swap .tr i { background: repeating-linear-gradient(-45deg, var(--pos-cashier) 0 5px, var(--warning) 5px 8px); }
+.note { font-size: 13px; color: var(--muted-foreground); }
+.sh.swap .note { color: var(--warning); font-weight: 600; }
+.chev { color: var(--muted-foreground); font-size: 18px; }
+.card { background: var(--card); border-radius: 4px; box-shadow: 0 0 0 1px var(--border); padding: 14px 14px 14px 26px; position: relative; overflow: hidden; }
+.card.caution::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: repeating-linear-gradient(-45deg, #E8B400 0 5px, #241C14 5px 10px); }
+.card .st { font-weight: 700; color: var(--warning); font-size: 13px; }
+.card p { margin: 4px 0 0; }
+.trade { display: grid; grid-template-columns: 1fr 24px 1fr; gap: 6px; align-items: center; margin: 10px 0 12px; }
+.trade div { background: var(--muted); border-radius: 6px; padding: 8px 10px; }
+.trade small { display: block; color: var(--muted-foreground); font-size: 12px; }
+.trade b { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 22px; display: block; line-height: 1.05; }
+.trade .arrow { text-align: center; background: none; padding: 0; color: var(--muted-foreground); font-size: 18px; }
+.acts { display: flex; gap: 8px; }
+.btn { flex: 1; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); font-weight: 700; font-size: 15px; }
+.btn.primary { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.fine { font-size: 12.5px; color: var(--muted-foreground); margin-top: 8px; }
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; background: var(--kraft); color: var(--kraft-foreground); display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 6px calc(8px + env(safe-area-inset-bottom)); }
+.tabs a { color: inherit; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 52px; font-size: 12px; font-weight: 600; border-radius: 8px; position: relative; }
+.tabs a svg { width: 22px; height: 22px; }
+.tabs a[aria-current] { background: var(--card); color: var(--foreground); }
+.tabs .dot { position: absolute; top: 5px; left: calc(50% + 8px); background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; border-radius: 9px; padding: 0 5px; line-height: 16px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <span class="mark">ShiftMate</span>
+    <button class="icon" aria-label="Notifications, 1 new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="dot">1</span></button>
+    <button class="icon" id="theme" aria-label="Switch light or dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+  </div>
+  <p class="when"><span>Next shift: tomorrow, Mon Sep 28</span><span class="count">in 15 h 20 min</span></p>
+  <div class="time">9:00–5:00</div>
+  <div class="where"><b>Cashier</b> at <b>Downtown</b>, 214 W Lake St. 8 h with a 30 min break. Opening with Marcus and Luis.</div>
+  <div class="htrack" aria-hidden="true"><i></i></div>
+  <div class="hax" aria-hidden="true"><span>6a</span><span>12p</span><span>6p</span><span>11p</span></div>
+  <div class="hacts"><button class="hbtn solid">Add to calendar</button><button class="hbtn">Request a swap</button></div>
+</header>
+<main>
+  <section aria-labelledby="swap-h">
+    <h2 id="swap-h">Swap request for you <span>from Tyler</span></h2>
+    <div class="card caution">
+      <div class="st">Needs your answer by Fri Oct 2</div>
+      <p>Tyler wants to trade Saturday for Sunday. Your hours stay at 36.</p>
+      <div class="trade">
+        <div><small>You give Sat Oct 3</small><b>10:00–6:00</b></div>
+        <div class="arrow" aria-hidden="true">⇄</div>
+        <div><small>You take Sun Oct 4</small><b>10:00–6:00</b></div>
+      </div>
+      <div class="acts"><button class="btn">Decline</button><button class="btn primary">Accept</button></div>
+      <p class="fine">If you accept, Dana approves it and you both get a notice in the app.</p>
+    </div>
+  </section>
+  <section aria-labelledby="wk-h">
+    <h2 id="wk-h">This week <span>36 h, 5 shifts</span></h2>
+    <div class="sheet">
+      <button class="sh"><span class="dn">28<small>Mon</small></span><span><span class="lbl"><b>9:00–5:00</b><span>Cashier, 8 h</span></span><span class="tr" style="display:block"><i style="left:17.6%;width:47.1%"></i></span><span class="note">Opening</span></span><span class="chev" aria-hidden="true">›</span></button>
+      <button class="sh"><span class="dn">29<small>Tue</small></span><span><span class="lbl"><b>9:00–5:00</b><span>Cashier, 8 h</span></span><span class="tr" style="display:block"><i style="left:17.6%;width:47.1%"></i></span><span class="note">With Sofia and Marcus</span></span><span class="chev" aria-hidden="true">›</span></button>
+      <button class="sh"><span class="dn">1<small>Thu</small></span><span><span class="lbl"><b>3:00–9:00</b><span>Cashier, 6 h</span></span><span class="tr" style="display:block"><i style="left:52.9%;width:35.3%"></i></span><span class="note">Closing</span></span><span class="chev" aria-hidden="true">›</span></button>
+      <button class="sh"><span class="dn">2<small>Fri</small></span><span><span class="lbl"><b>3:00–9:00</b><span>Cashier, 6 h</span></span><span class="tr" style="display:block"><i style="left:52.9%;width:35.3%"></i></span><span class="note">Closing with Ben</span></span><span class="chev" aria-hidden="true">›</span></button>
+      <button class="sh swap"><span class="dn">3<small>Sat</small></span><span><span class="lbl"><b>10:00–6:00</b><span>Cashier, 8 h</span></span><span class="tr" style="display:block"><i style="left:23.5%;width:47.1%"></i></span><span class="note">Tyler asked to trade this one</span></span><span class="chev" aria-hidden="true">›</span></button>
+    </div>
+  </section>
+  <section aria-labelledby="to-h">
+    <h2 id="to-h">Time off</h2>
+    <div class="card caution">
+      <div class="st">Waiting for Dana</div>
+      <p><b>Sat Oct 10 to Sun Oct 11</b>, family wedding. Sent Sep 24.</p>
+      <p class="fine">You won’t be scheduled those days while it’s pending.</p>
+    </div>
+  </section>
+</main>
+<nav class="tabs" aria-label="Main">
+  <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>My shifts</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="2" stroke-dasharray="3 2"/><path d="M12 10v6M9 13h6"/></svg>Open shifts</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 9h13l-3-3M19 15H6l3 3"/></svg>Swaps<span class="dot">1</span></a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg>Time off</a>
+</nav>
+<script>
+const r = document.documentElement, q = new URLSearchParams(location.search).get("theme");
+if (q) r.dataset.theme = q;
+document.getElementById("theme").onclick = () => r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark";
+</script>
+</body>
+</html>

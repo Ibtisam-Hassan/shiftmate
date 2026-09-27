@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShiftMate · Magnet Board · My shifts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&display=swap" rel="stylesheet">
+<style>
+:root { --background: #F3F7F4; --foreground: #16302A; --card: #FFFFFF; --primary: #1F4A3D; --primary-foreground: #fff; --muted: #E6EEE9; --muted-foreground: #4E6A61; --border: #CAD8D0; --ring: #2A62A8; --pos-cashier: #2A62A8; --warning: #E0A100; --warning-foreground: #6B4A00; --warning-bg: #FFF4D1; --board: #1F4A3D; --board-foreground: #E8F2EC; }
+[data-theme="dark"] { --background: #0F241E; --foreground: #E8F1EC; --card: #163129; --primary: #86D6AE; --primary-foreground: #0F241E; --muted: #1C3A31; --muted-foreground: #A5BFB3; --border: #2D4E43; --ring: #8DB8F0; --pos-cashier: #356DB5; --warning: #F2BC3A; --warning-foreground: #F6CF6B; --warning-bg: #3A2F0E; --board: #0A1C17; --board-foreground: #DCEBE3; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: "Lexend", system-ui, sans-serif; font-weight: 350; font-size: 15px; line-height: 1.45; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+b { font-weight: 600; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+header { background: var(--board); color: var(--board-foreground); padding: 14px 16px 22px; border-radius: 0 0 22px 22px; }
+.bar { display: flex; justify-content: space-between; align-items: center; }
+.mark { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+.mark span { display: flex; gap: 3px; } .mark i { width: 8px; height: 8px; border-radius: 50%; }
+.round { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: none; color: inherit; }
+header p { margin: 16px 0 6px; font-size: 14px; opacity: .85; }
+.next { font-size: 26px; font-weight: 500; line-height: 1.15; }
+.next small { display: block; font-size: 14px; font-weight: 350; opacity: .85; margin-top: 4px; }
+.mag { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 6px 14px; background: var(--pos-cashier); color: #fff; font-weight: 500; font-size: 14px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -2px 0 rgba(0,0,0,.14), 0 1.5px 2px rgba(10,30,24,.3); white-space: nowrap; }
+.mag.warn { outline: 2px dashed var(--warning); outline-offset: 2px; }
+main { padding: 18px 16px 96px; display: flex; flex-direction: column; gap: 22px; }
+h2 { margin: 0 0 8px; font-size: 16px; font-weight: 500; display: flex; justify-content: space-between; align-items: baseline; }
+h2 span { font-size: 13px; color: var(--muted-foreground); font-weight: 350; }
+.days { display: flex; flex-direction: column; gap: 8px; }
+.d { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; }
+.d .dt { text-align: center; line-height: 1.1; }
+.d .dt b { display: block; font-size: 20px; font-weight: 500; }
+.d .dt small { color: var(--muted-foreground); font-size: 12px; }
+.d .who { font-size: 12.5px; color: var(--muted-foreground); margin-top: 5px; }
+.d.swap .who { color: var(--warning-foreground); font-weight: 500; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+.st { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--warning-foreground); background: var(--warning-bg); border-radius: 999px; padding: 2px 10px; }
+.st::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--warning); }
+.card p { margin: 8px 0 10px; }
+.card p:last-child { margin-bottom: 0; }
+.pill { border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 8px 16px; font-size: 14px; }
+.tabs { position: fixed; bottom: 12px; left: 12px; right: 12px; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--board); color: var(--board-foreground); border-radius: 999px; padding: 6px; box-shadow: 0 6px 18px rgba(10,30,24,.25); }
+.tabs a { color: inherit; text-decoration: none; text-align: center; font-size: 12.5px; padding: 8px 0; border-radius: 999px; opacity: .8; }
+.tabs a[aria-current] { background: rgba(255,255,255,.14); opacity: 1; font-weight: 500; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar"><span class="mark"><span><i style="background:#4F8FD6"></i><i style="background:#E0A100"></i><i style="background:#6FC3A0"></i></span>ShiftMate</span><button class="round" id="theme" aria-label="Switch light or dark">◐</button></div>
+  <p>Hi Priya, you’re on tomorrow.</p>
+  <div class="next">Monday 9:00 to 5:00<small>Cashier at Downtown, 214 W Lake St · with Luis and Marcus</small></div>
+</header>
+<main>
+  <section>
+    <h2>This week <span>5 shifts · 36 h</span></h2>
+    <div class="days">
+      <div class="d"><div class="dt"><b>28</b><small>Mon</small></div><div><span class="mag">9:00–5:00</span><div class="who">Cashier · opening</div></div></div>
+      <div class="d"><div class="dt"><b>29</b><small>Tue</small></div><div><span class="mag">9:00–5:00</span><div class="who">Cashier · with Sofia and Marcus</div></div></div>
+      <div class="d"><div class="dt"><b>1</b><small>Thu</small></div><div><span class="mag">3:00–9:00</span><div class="who">Cashier · closing</div></div></div>
+      <div class="d swap"><div class="dt"><b>2</b><small>Fri</small></div><div><span class="mag warn">3:00–9:00</span><div class="who">Swap to Grace waiting for approval</div></div></div>
+      <div class="d"><div class="dt"><b>3</b><small>Sat</small></div><div><span class="mag">10:00–6:00</span><div class="who">Cashier · with Grace and Aisha</div></div></div>
+    </div>
+  </section>
+  <section>
+    <h2>Swap request</h2>
+    <div class="card">
+      <span class="st">Waiting for Dana</span>
+      <p><b>Fri Oct 2, 3:00–9:00</b> goes to Grace Chen. Grace said yes; your manager approves next.</p>
+      <button class="pill">Cancel swap</button>
+    </div>
+  </section>
+  <section>
+    <h2>Time off</h2>
+    <div class="card">
+      <span class="st">Pending</span>
+      <p><b>Sat Oct 10 to Sun Oct 11</b> · family wedding. Sent Sep 24.</p>
+    </div>
+  </section>
+</main>
+<nav class="tabs" aria-label="Main"><a href="#" aria-current="page">My shifts</a><a href="#">Open</a><a href="#">Swaps</a><a href="#">Time off</a></nav>
+<script>
+const r = document.documentElement, q = new URLSearchParams(location.search).get("theme");
+if (q) r.dataset.theme = q;
+document.getElementById("theme").onclick = () => r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark";
+</script>
+</body>
+</html>

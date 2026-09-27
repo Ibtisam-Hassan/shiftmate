@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BarChart3, CalendarDays, CircleHelp, Clock, Inbox, LogOut, Menu, Monitor, Moon, Settings, Sun, UserRoundCheck, Users,
+  Activity, BarChart3, CalendarDays, CircleHelp, Clock, Inbox, LogOut, Menu, Monitor, Moon, Settings, Sun, UserRoundCheck, Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 
 const ICONS = {
   calendar: CalendarDays, "user-clock": UserRoundCheck, users: Users, inbox: Inbox, chart: BarChart3,
-  settings: Settings, clock: Clock, help: CircleHelp,
+  settings: Settings, clock: Clock, help: CircleHelp, activity: Activity,
 } as const;
 
 interface ShellUser { name: string; email: string; role: string; scope: string; isDemo: boolean; unread: number }
@@ -98,6 +98,9 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavIte
   const [open, setOpen] = useState(false);
   return (
     <div className="flex min-h-dvh flex-col">
+      <a href="#main" className="sr-only z-50 rounded bg-card px-3 py-2 font-medium focus:not-sr-only focus:fixed focus:top-2 focus:left-2">
+        Skip to main content
+      </a>
       <header className="sticky top-0 z-30 bg-kraft text-kraft-foreground">
         <div className="flex items-center gap-6 px-4 md:px-6">
           <Link href="/" className="py-3"><Logo /></Link>
@@ -118,7 +121,7 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavIte
           </div>
         </div>
       </header>
-      <main className="flex-1 p-3 md:p-5">
+      <main id="main" tabIndex={-1} className="flex-1 p-3 outline-none md:p-5">
         <div className="min-h-full rounded-[3px] bg-card p-4 shadow-[0_1px_0_var(--border)] md:p-6">{children}</div>
       </main>
     </div>

@@ -17,6 +17,15 @@ export const admin: Topic[] = [
     ],
   },
   {
+    id: "activity",
+    title: "See who changed what",
+    roles: ["ADMIN", "MANAGER"],
+    blocks: [
+      { p: "Open Activity to see the last 100 changes, newest first. Each line shows who made the change, what they did, the store and the time." },
+      { p: "A manager sees the changes at their store. An admin sees every store. If someone kept a shift despite a warning, the line shows their reason." },
+    ],
+  },
+  {
     id: "settings",
     title: "Rules, stores and positions",
     roles: ["ADMIN"],

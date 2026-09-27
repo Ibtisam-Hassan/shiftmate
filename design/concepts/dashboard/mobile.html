@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShiftMate Home, phone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Big+Shoulders+Stencil+Display:wght@800&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="mobile.css">
+</head>
+<body class="m">
+<header class="topbar">
+  <span class="mark">ShiftMate</span>
+  <span class="spacer"></span>
+  <button class="iconbtn tap" type="button" aria-label="Notifications, 2 new">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Zm4 4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    <span class="dot">2</span>
+  </button>
+  <button class="iconbtn tap" type="button" id="theme" aria-label="Switch light or dark">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg>
+  </button>
+</header>
+
+<main class="page">
+  <section class="sheet">
+    <h1 class="mh1">Sunday, Sep 27</h1>
+    <p class="sub">Downtown, 8:10 am. Open until 10:00 pm.</p>
+
+    <p class="brief">
+      <a href="#today"><i class="ic g" aria-hidden="true"></i>Nobody is on from 7:00 to 10:00 tonight.</a>
+      <a href="#queue"><i class="ic c" aria-hidden="true">2</i>2 requests wait on you.</a>
+      <a href="#next"><i class="stripe" aria-hidden="true"></i>Next week is a draft with 1 blocker.</a>
+    </p>
+
+    <section id="today" class="today" aria-labelledby="t-h">
+      <div class="sec-head"><h2 id="t-h" class="sh">Today on the floor</h2><span class="muted">min 2</span></div>
+      <div class="day" id="day" role="img" aria-label="Today's coverage: 2 people from 8 am, 4 from 11 am to 4 pm, 1 at 6 pm, nobody from 7 to 10 pm."></div>
+      <div class="today-foot">
+        <p><i class="ic g" aria-hidden="true"></i><span><b>6–10 pm is below the minimum.</b> Fill the two 2:00–10:00 shifts to fix it.</span></p>
+        <button class="btn primary tap" type="button">Assign open shifts</button>
+      </div>
+    </section>
+
+    <section id="queue" class="queue" aria-labelledby="q-h">
+      <div class="sec-head"><h2 id="q-h" class="sh">Waiting on you</h2><span class="count">2</span></div>
+      <article class="ask ot">
+        <header><i class="ic o" aria-hidden="true">OT</i><h3>Approve Omar's overtime</h3></header>
+        <p>45 h next week. The 5 extra hours fall on Riverside shifts, so Downtown's cost does not change.</p>
+        <p class="due">Blocks publishing next week</p>
+        <div class="acts"><button class="btn primary tap" type="button">Approve 5 h</button><button class="btn tap" type="button">Move a shift…</button></div>
+      </article>
+      <article class="ask to">
+        <header><i class="ic w" aria-hidden="true">!</i><h3>Omar asks for Fri Oct 2 to Sat Oct 3 off</h3></header>
+        <p>“Cousin's wedding.” His 1 shift in those days becomes open.</p>
+        <div class="acts"><button class="btn primary tap" type="button">Approve</button><button class="btn tap" type="button">Deny…</button></div>
+      </article>
+    </section>
+
+    <section id="next" class="next" aria-labelledby="n-h">
+      <div class="sec-head"><h2 id="n-h" class="sh">Next week</h2><span class="tag draft">Draft</span><span class="muted">Sep 28 to Oct 4</span></div>
+      <div class="week" id="week"></div>
+      <ul class="counts">
+        <li><i class="ic o" aria-hidden="true">OT</i><span><b>1 blocks publishing:</b> Omar's overtime.</span></li>
+        <li><i class="ic w" aria-hidden="true">!</i><span><b>3 to check:</b> Diego Tue, Fri morning, Sun night.</span></li>
+        <li><i class="ic open" aria-hidden="true"></i><span><b>9 open shifts.</b></span></li>
+      </ul>
+      <button class="btn primary tap wide" type="button">Open the draft</button>
+    </section>
+
+    <section class="labor" aria-labelledby="l-h">
+      <div class="sec-head"><h2 id="l-h" class="sh">Labor against budget</h2><span class="muted">$7,400 a week</span></div>
+      <div class="lrow">
+        <div class="lhead"><span>This week</span><span class="big money">$5,558</span></div>
+        <div class="meter"><b style="width:75.1%"></b></div>
+        <div class="lfoot"><span>75% used</span><span><b>$1,843 left</b></span></div>
+      </div>
+      <div class="lrow">
+        <div class="lhead"><span>Next week <span class="tag draft sm">Draft</span></span><span class="big money">$5,250</span></div>
+        <div class="meter"><b style="width:70.9%"></b></div>
+        <div class="lfoot"><span>71% used</span><span><b>$2,150 left</b></span></div>
+      </div>
+    </section>
+
+    <section class="hours" aria-labelledby="h-h">
+      <div class="sec-head"><h2 id="h-h" class="sh">Close to overtime next week</h2></div>
+      <ul id="hours"></ul>
+    </section>
+  </section>
+</main>
+
+<nav class="tabbar" aria-label="Main">
+  <a href="#" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Home</a>
+  <a href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 10h16M9 3v4M15 3v4" stroke="currentColor" stroke-width="2"/></svg>Schedule<span class="b">1</span></a>
+  <a href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h5l1 3h4l1-3h5M4 13l2-8h12l2 8v6H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Requests<span class="b">1</span></a>
+  <a href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg>More</a>
+</nav>
+<script src="dashboard.js"></script>
+</body>
+</html>

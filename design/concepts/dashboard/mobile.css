@@ -1,0 +1,49 @@
+/* Phone layout (390 wide). Loaded after dashboard.css. */
+.m .topbar { gap: 8px; padding: 0 12px 0 16px; height: 56px; }
+.m .tap { min-width: 44px; min-height: 44px; }
+.m .iconbtn { border: 0; width: 44px; height: 44px; }
+.m .page { padding: 10px 0 16px; }
+.m .sheet { padding: 18px 16px 22px; border-radius: 0; box-shadow: 0 0 0 1px var(--border); }
+.m .mh1 { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 36px; line-height: .95; }
+.m .brief { font-size: 15.5px; margin: 12px 0 18px; padding-bottom: 16px; border-bottom: 2px solid var(--foreground); display: grid; gap: 6px; }
+.m .brief a { display: flex; gap: 6px; align-items: baseline; }
+.m .brief .ic, .m .brief .stripe { transform: translateY(2px); }
+.m section + section { margin-top: 26px; }
+.m .sec-head { flex-wrap: wrap; }
+
+/* day track: name above track, status or Assign under it */
+.m .day { --name: 0px; }
+.m .axis, .m .cov { grid-template-columns: minmax(0, 1fr); }
+.m .axis > span, .m .cov .lbl { display: none; }
+.m .cov .note { padding: 4px 0 0; }
+.m .cov .note br { display: none; }
+.m .hist { height: 40px; }
+.m .lane { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "nm st" "tr tr"; padding: 8px 0 4px; row-gap: 0; }
+.m .lane .nm { grid-area: nm; }
+.m .lane .nm span { display: flex; gap: 6px; align-items: baseline; }
+.m .lane .track { grid-area: tr; height: 26px; }
+.m .lane > div:last-child { grid-area: st; }
+.m .lane .lst { padding-left: 8px; text-align: right; }
+.m .lane .as { min-height: 44px; margin-left: 8px; }
+.m .bar .tm, .m .lane .nm small { display: none; }
+.m .lane .nm .tt { display: inline; font-style: normal; font-weight: 700; font-size: 13px; }
+.m .lane .nm span { gap: 8px; }
+.m .today-foot { flex-direction: column; align-items: stretch; gap: 10px; }
+.m .today-foot p { display: flex; gap: 8px; }
+.m .today-foot .ic { align-self: flex-start; margin-top: 3px; }
+.m .wide { width: 100%; margin-top: 12px; min-height: 44px; }
+
+.m .queue { gap: 10px; }
+.m .acts .btn { flex: 1; min-height: 44px; }
+
+.m .week { gap: 4px; margin-bottom: 12px; }
+.m .wd .dw { display: none; }
+.m .wd .dn { font-size: 20px; }
+.m .wd .flag { font-size: 0; min-height: 0; }
+.m .hours li { grid-template-columns: 104px minmax(0, 1fr) 48px; }
+
+.tabbar { position: sticky; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--kraft); color: var(--kraft-foreground); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); gap: 4px; z-index: 10; }
+.tabbar a { display: grid; justify-items: center; gap: 2px; text-decoration: none; font-size: 12px; font-weight: 600; padding: 6px 0; border-radius: 8px; min-height: 52px; position: relative; }
+.tabbar svg { width: 20px; height: 20px; }
+.tabbar a[aria-current] { background: var(--card); color: var(--foreground); }
+.tabbar .b { position: absolute; top: 2px; left: calc(50% + 6px); background: var(--danger); color: var(--card); border-radius: 9px; font-size: 10px; font-weight: 700; padding: 0 5px; }

@@ -3,7 +3,7 @@ import type { Role } from "@/server/authz/policy";
 export interface NavItem {
   href: string;
   label: string;
-  icon: "calendar" | "user-clock" | "users" | "inbox" | "chart" | "settings" | "clock" | "help";
+  icon: "calendar" | "user-clock" | "users" | "inbox" | "chart" | "settings" | "clock" | "help" | "activity";
 }
 
 export function navFor(role: Role): NavItem[] {
@@ -21,6 +21,7 @@ export function navFor(role: Role): NavItem[] {
     { href: "/team", label: "Team", icon: "users" },
     { href: "/requests", label: "Requests", icon: "inbox" },
     { href: "/labor", label: "Labor cost", icon: "chart" },
+    { href: "/activity", label: "Activity", icon: "activity" },
   ];
   if (role === "ADMIN") items.push({ href: "/settings", label: "Settings", icon: "settings" });
   items.push({ href: "/help", label: "Help", icon: "help" });

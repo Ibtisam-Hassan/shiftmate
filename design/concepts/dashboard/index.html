@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShiftMate Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Big+Shoulders+Stencil+Display:wght@800&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+<div class="mock" aria-label="Mockup controls">
+  <span>Mockup</span>
+  <div class="seg" role="group" aria-label="View as">
+    <button type="button" data-role="manager" aria-pressed="true">Manager view</button>
+    <button type="button" data-role="admin" aria-pressed="false">Admin view</button>
+  </div>
+  <button type="button" class="themebtn" id="theme">Dark mode</button>
+</div>
+
+<header class="topbar">
+  <span class="mark">ShiftMate</span>
+  <nav class="tabs" aria-label="Main">
+    <a href="#" aria-current="page">Home</a>
+    <a href="#">Schedule <span class="n" title="1 thing blocks next week">1</span></a>
+    <a href="#">Requests <span class="n">1</span></a>
+    <a href="#">Team</a>
+    <a href="#">Labor</a>
+    <a href="#">Activity</a>
+  </nav>
+  <span class="spacer"></span>
+  <button class="iconbtn" type="button" aria-label="Notifications, 2 new">
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Zm4 4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    <span class="dot">2</span>
+  </button>
+  <span class="me"><b class="who-name">Jordan Blake</b><small class="who-scope">Downtown manager</small></span>
+  <span class="av who-init">JB</span>
+</header>
+
+<main class="page">
+  <section class="sheet">
+    <div class="head">
+      <div>
+        <h1>Sunday, Sep 27</h1>
+        <p class="sub"><span class="scope-store">Downtown</span>, 8:10 am. Open 8:00 am to 10:00 pm.</p>
+      </div>
+    </div>
+
+    <!-- Admin only: the three stores side by side -->
+    <section class="stores3 admin-only" aria-labelledby="st-h">
+      <h2 id="st-h" class="sh">Your stores this morning</h2>
+      <div class="st-grid">
+        <a class="st is-sel" href="#">
+          <span class="st-name">Downtown</span>
+          <span class="st-line"><i class="ic g" aria-hidden="true"></i><b class="bad">Nobody on 7–10 pm</b></span>
+          <span class="st-line">3 open shifts today, 1 request</span>
+          <span class="mini"><b style="width:75%"></b></span>
+          <span class="st-foot"><span>$5,558 of $7,400</span><span>75%</span></span>
+        </a>
+        <a class="st" href="#">
+          <span class="st-name">Oak Park</span>
+          <span class="st-line"><i class="ic k" aria-hidden="true">✓</i>Covered all day</span>
+          <span class="st-line">No open shifts, no requests</span>
+          <span class="mini"><b style="width:89%"></b></span>
+          <span class="st-foot"><span>$5,325 of $6,000</span><span>89%</span></span>
+        </a>
+        <a class="st" href="#">
+          <span class="st-name">Riverside</span>
+          <span class="st-line"><i class="ic w" aria-hidden="true">!</i><b class="warn">$250 left this week</b></span>
+          <span class="st-line">1 swap waiting on Omar</span>
+          <span class="mini hot"><b style="width:96%"></b></span>
+          <span class="st-foot"><span>$5,950 of $6,200</span><span>96%</span></span>
+        </a>
+      </div>
+    </section>
+
+    <p class="brief">
+      <a href="#today"><i class="ic g" aria-hidden="true"></i>Nobody is scheduled from 7:00 to 10:00 tonight.</a>
+      The 3 open shifts would cover it.
+      <a href="#queue"><i class="ic c" aria-hidden="true">2</i>2 requests wait on you</a>, and
+      <a href="#next"><i class="stripe" aria-hidden="true"></i>next week is still a draft</a> with 1 thing that blocks publishing.
+    </p>
+
+    <div class="cols">
+      <div class="colmain">
+        <!-- The memorable thing: today as one day track -->
+        <section id="today" class="today" aria-labelledby="t-h">
+          <div class="sec-head">
+            <h2 id="t-h" class="sh">Today on the floor</h2>
+            <span class="muted">4 people, 3 open shifts, minimum 2 at a time</span>
+          </div>
+          <div class="day" id="day" role="img" aria-label="Today's coverage: 2 people from 8 am, 4 from 11 am to 4 pm, 1 at 6 pm, nobody from 7 to 10 pm.">
+            <!-- rendered by dashboard.js -->
+          </div>
+          <div class="today-foot">
+            <p><i class="ic g" aria-hidden="true"></i><b>6:00–10:00 pm is below the minimum.</b> Assign the two 2:00–10:00 shifts and tonight has 3 people.</p>
+            <button class="btn primary" type="button">Assign open shifts</button>
+          </div>
+        </section>
+
+        <section id="next" class="next" aria-labelledby="n-h">
+          <div class="sec-head">
+            <h2 id="n-h" class="sh">Next week, Sep 28 to Oct 4</h2>
+            <span class="tag draft">Draft</span>
+          </div>
+          <div class="week" id="week"><!-- rendered by dashboard.js --></div>
+          <div class="next-body">
+            <ul class="counts">
+              <li><i class="ic o" aria-hidden="true">OT</i><span><b>1 blocks publishing.</b> Omar is at 45 h and needs overtime approval.</span></li>
+              <li><i class="ic w" aria-hidden="true">!</i><span><b>3 to check.</b> Diego is unavailable Tue morning; Fri 8–10 am and Sun 6–10 pm are short.</span></li>
+              <li><i class="ic open" aria-hidden="true"></i><span><b>9 open shifts.</b> 4 are weekday 11:00–7:00 Floor.</span></li>
+            </ul>
+            <div class="next-act">
+              <button class="btn primary" type="button">Open the draft</button>
+              <p class="muted small">Publishing tells 9 people in the app. Staff can't see the week until then.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="colside">
+        <section id="queue" class="queue" aria-labelledby="q-h">
+          <div class="sec-head">
+            <h2 id="q-h" class="sh">Waiting on you</h2>
+            <span class="count">2</span>
+          </div>
+          <article class="ask ot">
+            <header><i class="ic o" aria-hidden="true">OT</i><h3>Approve Omar's overtime</h3></header>
+            <p>45 h next week across Downtown and Riverside. The 5 extra hours fall on Riverside shifts, so Downtown's cost does not change.</p>
+            <p class="due">Blocks publishing next week</p>
+            <div class="acts"><button class="btn primary" type="button">Approve 5 h</button><button class="btn" type="button">Move a shift…</button></div>
+          </article>
+          <article class="ask to">
+            <header><i class="ic w" aria-hidden="true">!</i><h3>Omar asks for Fri Oct 2 to Sat Oct 3 off</h3></header>
+            <p>“Cousin's wedding.” If you approve, his 1 shift in those days becomes an open shift.</p>
+            <p class="due">Asked Thu. Answer before you publish.</p>
+            <div class="acts"><button class="btn primary" type="button">Approve</button><button class="btn" type="button">Deny…</button></div>
+          </article>
+        </section>
+
+        <section class="labor" aria-labelledby="l-h">
+          <div class="sec-head"><h2 id="l-h" class="sh">Labor against budget</h2><span class="muted">$7,400 a week</span></div>
+          <div class="lrow">
+            <div class="lhead"><span>This week</span><span class="big money">$5,558</span></div>
+            <div class="meter"><b style="width:75.1%"></b></div>
+            <div class="lfoot"><span>75% used</span><span><b>$1,843 left</b></span></div>
+          </div>
+          <div class="lrow">
+            <div class="lhead"><span>Next week <span class="tag draft sm">Draft</span></span><span class="big money">$5,250</span></div>
+            <div class="meter"><b style="width:70.9%"></b></div>
+            <div class="lfoot"><span>71% used, $308 less than this week</span><span><b>$2,150 left</b></span></div>
+          </div>
+        </section>
+
+        <section class="hours" aria-labelledby="h-h">
+          <div class="sec-head"><h2 id="h-h" class="sh">Close to overtime next week</h2><span class="muted">40 h limit</span></div>
+          <ul id="hours"><!-- rendered by dashboard.js --></ul>
+          <p class="muted small">Everyone else is at 30 h or less.</p>
+        </section>
+
+        <section class="since" aria-labelledby="s-h">
+          <div class="sec-head"><h2 id="s-h" class="sh">Since Friday</h2></div>
+          <ol>
+            <li><time>Sat 4:02 pm</time><span><b>Maya Patel</b> offered her Mon 11:00–7:00 to Omar. Waiting for Omar.</span></li>
+            <li><time>Fri 9:40 am</time><span><b>Omar Haddad</b> asked for Fri Oct 2 to Sat Oct 3 off.</span></li>
+            <li><time>Fri 9:15 am</time><span>You approved <b>Maya Patel</b>'s time off on Mon Oct 5.</span></li>
+          </ol>
+          <a class="more" href="#">All activity</a>
+        </section>
+      </aside>
+    </div>
+  </section>
+</main>
+<script src="dashboard.js"></script>
+</body>
+</html>

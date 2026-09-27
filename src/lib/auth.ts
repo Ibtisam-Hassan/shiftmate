@@ -4,7 +4,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink } from "better-auth/plugins";
 import { db } from "@/lib/db";
-import { sendMagicLinkEmail } from "@/lib/email";
+import { canReceiveMagicLink, sendMagicLinkEmail } from "@/lib/email";
 
 import { DEMO_EMAIL_DOMAIN } from "@/lib/demo";
 
@@ -57,11 +57,7 @@ export const auth = betterAuth({
       disableSignUp: true, // invite-only: unknown emails get no link
       expiresIn: 60 * 15,
       sendMagicLink: async ({ email, url }) => {
-        // `disableSignUp` only refuses the link when it's used; without this check we'd still email
-        // any address typed into the form. Unknown and deactivated addresses get nothing, silently.
-        const user = await db.user.findUnique({ where: { email: email.toLowerCase() }, select: { status: true } });
-        if (!user || user.status === "DEACTIVATED") return;
-        await sendMagicLinkEmail(email, url);
+        if (await canReceiveMagicLink(email)) await sendMagicLinkEmail(email, url);
       },
     }),
     nextCookies(), // must stay last

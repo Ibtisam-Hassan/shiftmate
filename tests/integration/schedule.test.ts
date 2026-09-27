@@ -3,9 +3,9 @@ import { db } from "@/lib/db";
 import { ForbiddenError } from "@/server/authz/policy";
 import { resetDemoData } from "@/server/demo/seed";
 import { getBoard } from "@/server/services/board";
-import {
-  approveOvertime, copyLastWeek, createShift, keepAnyway, moveShift, publishWeek,
-} from "@/server/services/shifts";
+import { approveOvertime, keepAnyway } from "@/server/services/approvals";
+import { createShift, moveShift } from "@/server/services/shifts";
+import { copyLastWeek, publishWeek } from "@/server/services/week";
 import { actorFor } from "./actors";
 
 const NOW = new Date("2026-09-23T15:00:00Z"); // Wed; this week starts 09-21, next week's draft is 09-28

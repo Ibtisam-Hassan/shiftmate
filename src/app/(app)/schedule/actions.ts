@@ -8,10 +8,11 @@ import { requireActor } from "@/server/authz/actor";
 import { canManageLocation } from "@/server/authz/policy";
 import { run, UserError } from "@/server/errors";
 import { getBoard } from "@/server/services/board";
+import { approveOvertime, keepAnyway } from "@/server/services/approvals";
 import {
-  type ShiftInput, approveOvertime, assignShift, copyLastWeek, createShift, deleteShift, keepAnyway, makeOpen, moveShift,
-  publishWeek, updateShift,
+  type ShiftInput, assignShift, createShift, deleteShift, makeOpen, moveShift, updateShift,
 } from "@/server/services/shifts";
+import { copyLastWeek, publishWeek } from "@/server/services/week";
 
 async function act<T>(fn: (a: Awaited<ReturnType<typeof requireActor>>) => Promise<T>) {
   const actor = await requireActor();

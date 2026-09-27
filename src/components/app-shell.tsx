@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BarChart3, CalendarDays, Clock, Inbox, LogOut, Menu, Monitor, Moon, Settings, Sun, UserRoundCheck, Users,
+  BarChart3, CalendarDays, CircleHelp, Clock, Inbox, LogOut, Menu, Monitor, Moon, Settings, Sun, UserRoundCheck, Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 
 const ICONS = {
   calendar: CalendarDays, "user-clock": UserRoundCheck, users: Users, inbox: Inbox, chart: BarChart3,
-  settings: Settings, clock: Clock,
+  settings: Settings, clock: Clock, help: CircleHelp,
 } as const;
 
 interface ShellUser { name: string; email: string; role: string; scope: string; isDemo: boolean }

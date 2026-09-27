@@ -92,5 +92,5 @@ test("employees see published weeks read-only and never see drafts or pay", asyn
   await expect(page.getByText("Regular pay")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Publish week" })).toHaveCount(0);
   await page.getByRole("link", { name: "Next week" }).click();
-  await expect(page.getByText("This week isn't published yet.")).toBeVisible();
+  await expect(page.getByText("This week is not published yet.")).toBeVisible();
 });

@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import type { Board, BoardShift } from "@/server/services/board";
 import { CoverageStrip } from "./coverage-strip";
-import { type Verdict, cellId } from "./drop-rules";
+import { type Verdict, cellId, parseCell } from "./drop-rules";
 import { POSITION_BG, dayLabel, hours, weekTitle } from "./format";
 import { GridCell } from "./grid-cell";
 import { HoursMeter } from "./hours-meter";
@@ -20,6 +20,7 @@ interface Props {
   filtered: boolean;
   renderShift: (s: BoardShift) => React.ReactNode;
   onAdd: (draft: ShiftDraft) => void;
+  meId?: string;
 }
 
 function DayHeaders({ board, shifts }: { board: Board; shifts: BoardShift[] }) {
@@ -30,20 +31,20 @@ function DayHeaders({ board, shifts }: { board: Board; shifts: BoardShift[] }) {
       <div key={d} role="columnheader" className="@container border-b border-l px-2 pt-2 pb-1">
         <p className="flex items-baseline justify-between whitespace-nowrap">
           <span><span className="font-numeric text-[26px] leading-none">{l.num}</span> <span className="text-sm font-semibold">{l.dow}</span></span>
-          <span className="hidden text-xs text-muted-foreground @min-[112px]:inline">{hours(minutes)}</span>
+          {board.canEdit && <span className="hidden text-xs text-muted-foreground @min-[112px]:inline">{hours(minutes)}</span>}
         </p>
       </div>
     );
   });
 }
 
-function PersonHeader({ row, threshold }: { row: Row; threshold: number }) {
+function PersonHeader({ row, threshold, me }: { row: Row; threshold: number; me: boolean }) {
   const needsOt = row.overtimeMinutes > 0 && !row.overtimeApproved;
   return (
-    <div role="rowheader" className={cn("border-b border-l px-2 py-1.5", needsOt && "shadow-[inset_3px_0_0_var(--overtime)]")}>
+    <div role="rowheader" className={cn("border-b border-l px-2 py-1.5", needsOt && "shadow-[inset_3px_0_0_var(--overtime)]", me && "bg-accent/60")}>
       <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
         {row.pos && <span className={cn("h-1.5 w-3 shrink-0 rounded-full", POSITION_BG[row.pos.color])} aria-hidden />}
-        {row.name}
+        {row.name}{me && <span className="text-xs font-normal text-muted-foreground">(you)</span>}
       </p>
       <HoursMeter minutes={row.weekMinutes} threshold={threshold} approved={row.overtimeApproved} className="mt-1" />
       {row.overtimeMinutes > 0 && (
@@ -55,11 +56,12 @@ function PersonHeader({ row, threshold }: { row: Row; threshold: number }) {
   );
 }
 
-export function WeekGrid({ board, shifts, rows, verdicts, overId, dragging, filtered, renderShift, onAdd }: Props) {
+export function WeekGrid({ board, shifts, rows, verdicts, overId, dragging, filtered, renderShift, onAdd, meId }: Props) {
   const cell = (userId: string | null, day: string, label: string, children: React.ReactNode, className?: string) => {
     const id = cellId(userId, day);
+    const overRow = overId ? parseCell(overId).userId : undefined;
     return (
-      <GridCell key={id} id={id} label={label} verdict={verdicts.get(id)} isOver={overId === id} dragging={dragging} className={className}
+      <GridCell key={id} id={id} label={label} verdict={verdicts.get(id)} isOver={overId === id} dragging={dragging} showReason={overRow === userId} className={className}
         onAdd={board.canEdit ? () => onAdd({ day, userId }) : undefined}>
         <div className="grid gap-1">{children}</div>
       </GridCell>
@@ -103,7 +105,7 @@ export function WeekGrid({ board, shifts, rows, verdicts, overId, dragging, filt
 
         {rows.map((row) => (
           <div key={row.id} role="row" className="contents">
-            <PersonHeader row={row} threshold={board.rules.overtimeThresholdMinutes} />
+            <PersonHeader row={row} threshold={board.rules.overtimeThresholdMinutes} me={row.id === meId} />
             {board.days.map((d) => {
               const mine = shifts.filter((s) => s.userId === row.id && s.day === d);
               const off = board.timeOff.some((t) => t.userId === row.id && t.day === d);

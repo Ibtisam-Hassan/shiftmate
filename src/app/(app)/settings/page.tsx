@@ -52,7 +52,7 @@ export default async function SettingsPage() {
         <section aria-labelledby="pos-h" className="grid gap-4 lg:grid-cols-[16rem_1fr]">
           <div>
             <h2 id="pos-h" className="font-semibold">Positions</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Roles a shift can be for. Colours match the schedule.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Roles a shift can be for. Colors match the schedule.</p>
           </div>
           <PositionsEditor
             stores={locations.map((l) => ({

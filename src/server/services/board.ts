@@ -6,7 +6,7 @@ import { costShifts, paidMinutes, summarize } from "@/domain/labor";
 import { rateOn } from "@/domain/pay";
 import { addDays, fromDbDate, localDateOf, weekDates, weekInterval, weekStartOf } from "@/domain/time";
 import { type Actor, ForbiddenError, canManageLocation, canViewLocation } from "@/server/authz/policy";
-import { fmtRange, laborFor, localSpan, shiftsFor, timeOffDays, unavailableDays } from "./board-parts";
+import { fmtRange, laborFor, localSpan, mainPositions, shiftsFor, timeOffDays, unavailableDays } from "./board-parts";
 import type { Board, BoardPerson, BoardShift } from "./board-types";
 
 export type { Board, BoardPerson, BoardShift, Busy } from "./board-types";
@@ -96,6 +96,7 @@ export async function getBoard(actor: Actor, locationId: string, weekInput?: str
   const inWeek = around.filter((s) => s.startsAt >= start && s.startsAt < end);
   const { shifts: costs, weeks } = costShifts(inWeek, { ...org, tzOf: (id) => tzById.get(id) ?? tz, ratesOf });
 
+  const mains = await mainPositions(locationId, userIds, end);
   const people: BoardPerson[] = users.map((u) => {
     const w = weeks.find((x) => x.userId === u.id);
     const minutes = w?.scheduledMinutes ?? 0;
@@ -105,6 +106,7 @@ export async function getBoard(actor: Actor, locationId: string, weekInput?: str
       rateCents: canEdit ? rateOn(ratesOf(u.id), localDateOf(now, tz)) : null,
       weekMinutes: minutes, overtimeMinutes: w?.overtimeMinutes ?? 0,
       overtimeApproved: !!approval && approval.approvedMinutes >= minutes,
+      mainPositionId: mains.get(u.id) ?? null,
     };
   }).sort((a, b) => a.name.localeCompare(b.name));
 

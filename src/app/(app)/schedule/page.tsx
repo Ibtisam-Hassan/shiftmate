@@ -24,5 +24,5 @@ export default async function SchedulePage({ searchParams }: PageProps<"/schedul
   if (!locationId) return <p className="text-muted-foreground">No stores yet. An admin can add one in Settings.</p>;
   const board = await getBoard(actor, locationId, typeof week === "string" ? week : undefined);
   // A new key per store/week resets filters and selection when navigating.
-  return <ScheduleBoard key={`${board.location.id}|${board.weekStart}`} board={board} />;
+  return <ScheduleBoard key={`${board.location.id}|${board.weekStart}`} board={board} meId={actor.id} />;
 }

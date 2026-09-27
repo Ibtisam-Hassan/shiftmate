@@ -31,23 +31,23 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <div className="w-full max-w-sm space-y-6">
           <Logo className="lg:hidden" />
           <div className="space-y-1">
-            <h2 className="font-numeric text-4xl leading-none">Sign in</h2>
-            <p className="text-sm text-muted-foreground">ShiftMate is invite-only. Use the email your manager added.</p>
+            <h2 className="font-numeric text-4xl leading-none">{demo ? "Try ShiftMate" : "Sign in"}</h2>
+            <p className="text-sm text-muted-foreground">
+              {demo ? "Pick a role to explore a demo store. Nothing you do affects anyone." : "ShiftMate is invite-only. Use the email your manager added."}
+            </p>
           </div>
           {error === "link" && (
             <p role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               That sign-in link is invalid or has expired. Request a new one.
             </p>
           )}
-          <MagicLinkForm />
+          {demo && <DemoButtons />}
           {demo && (
-            <>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <Separator className="flex-1" /> or explore the demo <Separator className="flex-1" />
-              </div>
-              <DemoButtons />
-            </>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <Separator className="flex-1" /> Have an invite? <Separator className="flex-1" />
+            </div>
           )}
+          <MagicLinkForm />
         </div>
       </section>
     </main>

@@ -1,4 +1,5 @@
-import { addDays, dayOfWeek, localDateOf, minutesBetween, overlaps, atLocal } from "./time";
+import { clockTime } from "./format";
+import { addDays, dayOfWeek, localDateOf, localMinuteOf, minutesBetween, overlaps, atLocal } from "./time";
 
 export type ConflictKind = "OVERLAP" | "UNAVAILABLE" | "TIME_OFF" | "SHORT_REST" | "NOT_ASSIGNED_TO_LOCATION";
 export type Severity = "block" | "warn";
@@ -60,9 +61,7 @@ export interface ConflictInput {
   overrides?: { shiftId: string; kind: string }[];
 }
 
-function fmt(d: Date, tz: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(d).replace(":00", "");
-}
+const fmt = (d: Date, tz: string) => clockTime(localMinuteOf(d, tz));
 
 /** Local days a shift touches (an overnight shift touches two). */
 function localDays(s: ScheduledShift, tz: string): string[] {
@@ -98,7 +97,7 @@ export function detectConflicts(input: ConflictInput): Conflict[] {
         if (overlaps(s.startsAt, s.endsAt, o.startsAt, o.endsAt)) {
           const where = o.locationId === s.locationId ? "" : ` at ${input.locationName(o.locationId)}`;
           push({ shiftId: s.id, kind: "OVERLAP", relatedShiftId: o.id,
-            detail: `Also booked ${fmt(o.startsAt, tz)}–${fmt(o.endsAt, tz)}${where}.` });
+            detail: `Also booked ${fmt(o.startsAt, tz)} to ${fmt(o.endsAt, tz)}${where}.` });
         }
       }
 
@@ -129,7 +128,7 @@ export function detectConflicts(input: ConflictInput): Conflict[] {
       });
       if (clash) {
         const whole = clash.startMinute === 0 && clash.endMinute === 1440;
-        const until = `${String(Math.floor(clash.endMinute / 60) % 24).padStart(2, "0")}:${String(clash.endMinute % 60).padStart(2, "0")}`;
+        const until = clockTime(clash.endMinute);
         push({ shiftId: s.id, kind: "UNAVAILABLE", detail: whole ? "Marked unavailable all day." : `Marked unavailable until ${until}.` });
       }
 

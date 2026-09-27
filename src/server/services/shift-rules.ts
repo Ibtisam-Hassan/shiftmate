@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
+import { whenAt } from "@/domain/format";
 import { atLocal, toDbDate, weekStartOf } from "@/domain/time";
 import { notify } from "@/server/audit";
 import { type Actor, ForbiddenError, assertCanManageLocation, canManageLocation } from "@/server/authz/policy";
@@ -71,7 +72,7 @@ export async function tellIfPublished(tx: Tx, weekId: string, userIds: (string |
 }
 
 export function describe(startsAt: Date, tz: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(startsAt);
+  return whenAt(startsAt, tz);
 }
 
 export async function save<T>(fn: () => Promise<T>): Promise<T> {

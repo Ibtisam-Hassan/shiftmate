@@ -47,11 +47,36 @@ function BudgetMeter({ board }: { board: Board }) {
   );
 }
 
+/**
+ * A person's overtime is charged to the store where their last shifts of the week fall. When that is
+ * another store, say so, or the $0 here looks like a mistake next to their overtime flag.
+ */
+function OvertimeElsewhere({ board }: { board: Board }) {
+  const withOt = board.people.filter((p) => p.overtimeMinutes > 0 && board.shifts.some((s) => s.userId === p.id));
+  const elsewhere = withOt.filter((p) => !board.shifts.some((s) => s.userId === p.id && s.overtimeMinutes > 0));
+  if (!elsewhere.length) return null;
+  const names = elsewhere.map((p) => p.name.split(" ")[0]).join(", ");
+  return (
+    <p className="w-full px-3 text-xs text-muted-foreground">
+      {names}: overtime falls on shifts at another store, so it is not in this store&apos;s cost. It still needs approval here.
+    </p>
+  );
+}
+
 /** Hours and cost for this store's week, compared with last week and the budget. */
-export function LaborStrip({ board }: { board: Board }) {
+export function LaborStrip({ board, compact }: { board: Board; compact?: boolean }) {
   const labor = board.labor;
   if (!labor) return null;
   const money = (n: number) => formatCents(n, { compact: true });
+  if (compact) {
+    // Phones: the total and the budget are the two numbers a manager checks on the floor.
+    return (
+      <div className="grid gap-1 border-y py-2">
+        <Stat label="Total labor" value={money(labor.totalCents)} sub={`${hours(labor.scheduledMinutes)} scheduled`} />
+        {board.location.weeklyBudgetCents ? <BudgetMeter board={board} /> : null}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap items-stretch border-y py-1">
       <Stat label="Scheduled" value={hours(labor.scheduledMinutes)} sub={vsLastWeek(labor.scheduledMinutes, labor.lastWeek?.scheduledMinutes, hours)} />
@@ -60,6 +85,7 @@ export function LaborStrip({ board }: { board: Board }) {
         value={money(labor.overtimeCents)} valueClass={labor.overtimeCents ? "text-overtime" : undefined} />
       <Stat label="Total labor" value={money(labor.totalCents)} sub={vsLastWeek(labor.totalCents, labor.lastWeek?.totalCents, money)} />
       {board.location.weeklyBudgetCents ? <BudgetMeter board={board} /> : null}
+      <OvertimeElsewhere board={board} />
       {labor.unpricedShifts > 0 && (
         <p className="w-full px-3 text-xs text-warning">{labor.unpricedShifts} shifts have no pay rate, so they aren&apos;t counted.</p>
       )}

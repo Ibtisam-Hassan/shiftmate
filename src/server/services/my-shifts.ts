@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { localDateOf, localMinuteOf, minutesBetween } from "@/domain/time";
+import { clockTime, whenAt } from "@/domain/format";
+import { localDateOf, localMinuteOf, minutesBetween, weekInterval, weekStartOf } from "@/domain/time";
 import { paidMinutes } from "@/domain/labor";
 import type { Actor } from "@/server/authz/policy";
 
@@ -66,10 +67,15 @@ export async function swapOptions(actor: Actor, shiftId: string) {
     },
     orderBy: { name: "asc" },
   });
-  const label = (s: { startsAt: Date; endsAt: Date }) => {
-    const f = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(d);
-    const day = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric" }).format(s.startsAt);
-    return `${day}, ${f(s.startsAt)} to ${f(s.endsAt)}`;
-  };
+  const label = (s: { startsAt: Date; endsAt: Date }) => `${whenAt(s.startsAt, tz)} to ${clockTime(localMinuteOf(s.endsAt, tz))}`;
   return people.map((p) => ({ id: p.id, name: p.name, shifts: p.shifts.map((s) => ({ id: s.id, label: label(s) })) }));
+}
+
+/** Paid minutes this week (past and future shifts, every store), and the overtime limit. */
+export async function myWeek(actor: Actor, now = new Date()) {
+  const org = await db.organization.findFirstOrThrow();
+  const tz = "America/Chicago";
+  const week = weekInterval(weekStartOf(localDateOf(now, tz), org.weekStartsOn), tz);
+  const shifts = await db.shift.findMany({ where: { userId: actor.id, startsAt: { gte: week.start, lt: week.end }, scheduleWeek: { status: "PUBLISHED" } } });
+  return { minutes: shifts.reduce((a, s) => a + paidMinutes(s), 0), limit: org.overtimeThresholdMinutes };
 }

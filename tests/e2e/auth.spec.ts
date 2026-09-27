@@ -9,12 +9,14 @@ test("signed-out visitors are sent to login", async ({ page }) => {
 
 test("each demo role lands on its home page with the right navigation", async ({ page }) => {
   await loginAs(page, "Admin");
-  await expect(page).toHaveURL(/\/schedule/);
-  await expect(page.getByRole("link", { name: "Settings" }).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/home/);
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await expect(page.getByRole("menuitem", { name: "Settings" })).toBeVisible();
+  await page.keyboard.press("Escape");
 
   await page.context().clearCookies();
   await loginAs(page, "Manager");
-  await expect(page).toHaveURL(/\/schedule/);
+  await expect(page).toHaveURL(/\/home/);
   await expect(page.getByText("Downtown · Manager").first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Settings" })).toHaveCount(0);
 
@@ -46,7 +48,7 @@ test("magic link signs an invited user in; unknown emails get the same response"
     expect(rows).toHaveLength(1);
     const token = rows[0].identifier;
     await page.goto(`/api/auth/magic-link/verify?token=${token}&callbackURL=/`);
-    await expect(page).toHaveURL(/\/schedule/);
+    await expect(page).toHaveURL(/\/home/);
 
     // A link works once.
     await page.context().clearCookies();

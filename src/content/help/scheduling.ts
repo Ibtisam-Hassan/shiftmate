@@ -4,6 +4,22 @@ const MANAGERS: Topic["roles"] = ["ADMIN", "MANAGER"];
 
 export const scheduling: Topic[] = [
   {
+    id: "home",
+    title: "The Home page",
+    roles: MANAGERS,
+    blocks: [
+      { p: "Home is the first page that you see. It shows what needs you today." },
+      { list: [
+        "The sentence at the top names the problems, with a link to each one.",
+        "Today shows who works now, as bars on the day. The blue line is the time now. Red stripes show hours with too few people.",
+        "Waiting on you lists the decisions that only you can make, with a button for each one.",
+        "Next week shows the draft, what blocks publishing, and a coverage strip for each day.",
+        "The right column shows the cost against the budget, the people close to overtime, and recent changes.",
+      ] },
+      { p: "An admin can choose the store with the store buttons next to the date." },
+    ],
+  },
+  {
     id: "build-week",
     title: "Build a week",
     roles: MANAGERS,

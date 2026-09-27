@@ -1,3 +1,4 @@
+import { clockRange } from "@/domain/format";
 import { TRACK_END, TRACK_START } from "@/domain/coverage";
 
 /** "9:00" or "9" (compact); 12-hour clock without am/pm, like a paper rota. */
@@ -13,15 +14,8 @@ export function range(startMin: number, endMin: number, compact = false) {
   return `${clock(startMin, compact)}–${clock(endMin, compact)}`;
 }
 
-/** Spoken form for aria-labels and tooltips: "9:00 AM to 5:00 PM". */
-export function spokenRange(startMin: number, endMin: number) {
-  const f = (min: number) => {
-    const m = ((min % 1440) + 1440) % 1440;
-    const h = Math.floor(m / 60);
-    return `${h % 12 || 12}:${String(m % 60).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
-  };
-  return `${f(startMin)} to ${f(endMin)}`;
-}
+/** Spoken form for labels and tooltips: "9:00 am to 5:00 pm". */
+export const spokenRange = clockRange;
 
 export function hhmm(min: number) {
   const m = ((min % 1440) + 1440) % 1440;

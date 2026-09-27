@@ -32,7 +32,7 @@ export function BoardToolbar({ positions, filters, onChange }: {
         );
       })}
       <label className="ml-2 flex items-center gap-2 text-sm">
-        <Switch checked={filters.problemsOnly} onCheckedChange={(v) => onChange({ ...filters, problemsOnly: v })} />
+        <Switch aria-label="Problems only" checked={filters.problemsOnly} onCheckedChange={(v) => onChange({ ...filters, problemsOnly: v })} />
         Problems only
       </label>
       <div className="relative ml-auto w-48">

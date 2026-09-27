@@ -9,6 +9,7 @@ import { formatCents } from "@/domain/pay";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/server/authz/policy";
 import type { TeamMember } from "@/server/services/people";
+import { HoursMeter } from "../schedule/hours-meter";
 import { RowActions, StatusBadge } from "./row-actions";
 
 const ROLE_LABEL = { ADMIN: "Admin", MANAGER: "Manager", EMPLOYEE: "Employee" } as const;
@@ -41,14 +42,14 @@ export function TeamTable({ team, locations, actorRole, actorId }: {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-md border">
+      <div className="max-w-5xl overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/60 hover:bg-muted/60">
               <TableHead>Name</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead className="w-24 text-right">Rate</TableHead>
               <TableHead>Stores</TableHead>
-              <TableHead className="text-right">Rate</TableHead>
+              <TableHead className="w-56">This week</TableHead>
               <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>
             </TableRow>
           </TableHeader>
@@ -57,27 +58,17 @@ export function TeamTable({ team, locations, actorRole, actorId }: {
               <TableRow key={p.id} className={cn(p.status === "DEACTIVATED" && "opacity-60")}>
                 <TableCell>
                   <div className="flex items-center gap-2 font-medium">{p.name} <StatusBadge status={p.status} /></div>
-                  <div className="text-xs text-muted-foreground">{p.email}</div>
-                </TableCell>
-                <TableCell>{ROLE_LABEL[p.role]}</TableCell>
-                <TableCell>
-                  {p.managedLocation ? (
-                    <span>Runs {p.managedLocation.name}</span>
-                  ) : p.role === "ADMIN" ? (
-                    <span className="text-muted-foreground">All stores</span>
-                  ) : (
-                    <span>
-                      {p.locations.map((l, i) => (
-                        <span key={l.id}>
-                          {i > 0 && ", "}
-                          <span className={cn(l.isHome ? "font-medium" : "text-muted-foreground")}>{l.name}</span>
-                        </span>
-                      ))}
-                    </span>
-                  )}
+                  <div className="text-xs text-muted-foreground">{p.role === "EMPLOYEE" ? p.email : `${ROLE_LABEL[p.role]} · ${p.email}`}</div>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
                   {p.hourlyRateCents ? `${formatCents(p.hourlyRateCents)}/h` : <span className="text-muted-foreground">Not set</span>}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {p.managedLocation ? `Runs ${p.managedLocation.name}` : p.role === "ADMIN" ? <span className="text-muted-foreground">All stores</span>
+                    : p.locations.map((l) => `${l.name}${l.isHome && p.locations.length > 1 ? " (home)" : ""}`).join(", ")}
+                </TableCell>
+                <TableCell>
+                  {p.role === "EMPLOYEE" ? <HoursMeter minutes={p.weekMinutes} threshold={p.overtimeLimitMinutes} /> : null}
                 </TableCell>
                 <TableCell><RowActions person={p} locations={locations} actorRole={actorRole} actorId={actorId} /></TableCell>
               </TableRow>

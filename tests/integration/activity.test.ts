@@ -15,14 +15,15 @@ beforeAll(async () => {
 });
 
 describe("activity", () => {
-  it("shows a manager only their store, in plain words", async () => {
+  it("shows a manager only their store, newest first, in plain words", async () => {
     const rows = await recentActivity(await actorFor("manager@demo.shiftmate.app"));
-    expect(rows.length).toBe(1);
     expect(rows[0]).toMatchObject({ who: "Jordan Blake", what: "added a shift", store: "Downtown" });
+    expect(rows.every((r) => r.store === "Downtown")).toBe(true);
   });
 
   it("shows the admin every store, and refuses employees", async () => {
-    expect((await recentActivity(await actorFor("admin@demo.shiftmate.app"))).length).toBe(2);
+    const stores = new Set((await recentActivity(await actorFor("admin@demo.shiftmate.app"))).map((r) => r.store));
+    expect(stores).toEqual(new Set(["Downtown", "Riverside", "Oak Park"]));
     await expect(recentActivity(await actorFor("employee@demo.shiftmate.app"))).rejects.toBeInstanceOf(ForbiddenError);
   });
 });

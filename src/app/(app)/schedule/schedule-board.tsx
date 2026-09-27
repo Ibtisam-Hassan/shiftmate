@@ -4,13 +4,15 @@ import {
   DndContext, type DragEndEvent, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors,
 } from "@dnd-kit/core";
 import { useMemo, useOptimistic, useState, useTransition } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { toast } from "sonner";
 import type { Board, BoardShift } from "@/server/services/board";
 import { moveShiftAction } from "./actions";
 import { BoardToolbar, type Filters } from "./board-toolbar";
-import { dropTarget, parseCell, verdictsFor } from "./drop-rules";
+import { dragHint, dropTarget, parseCell, verdictsFor } from "./drop-rules";
 import { EmptyWeek } from "./empty-week";
-import { dayLabel, hours, range } from "./format";
+import { DayView } from "./day-view";
+import { dayLabel, range } from "./format";
 import { LaborStrip } from "./labor-strip";
 import { ReviewRail, buildItems } from "./review-rail";
 import { ShiftDialog, type ShiftDraft } from "./shift-dialog";
@@ -18,23 +20,13 @@ import { ShiftSlot } from "./shift-slot";
 import { useRows } from "./use-rows";
 import { WeekBanner } from "./week-banner";
 import { WeekGrid } from "./week-grid";
-import { WeekHeader } from "./week-header";
+import { WeekHeader, publishBlocker } from "./week-header";
 
 type Move = { id: string; day: string; userId: string | null };
 
-/** "Jordan: 36 h → 43.5 h, +3.5 h overtime" for the person under the pointer. */
-function dragHint(board: Board, dragged: BoardShift | null, overId: string | null) {
-  if (!dragged || !overId) return null;
-  const { userId } = parseCell(overId);
-  const p = board.people.find((x) => x.id === userId);
-  if (!p || p.id === dragged.userId) return null;
-  const limit = board.rules.overtimeThresholdMinutes;
-  const after = p.weekMinutes + dragged.paidMinutes;
-  const addedOt = Math.max(0, after - limit) - Math.max(0, p.weekMinutes - limit);
-  return `${p.name.split(" ")[0]}: ${hours(p.weekMinutes)} → ${hours(after)}${addedOt > 0 ? `, +${hours(addedOt)} overtime` : ""}`;
-}
 
-export function ScheduleBoard({ board }: { board: Board }) {
+export function ScheduleBoard({ board, meId }: { board: Board; meId: string }) {
+  const isPhone = useMediaQuery("(max-width: 639px)");
   const [shifts, applyMove] = useOptimistic(board.shifts, (state, m: Move) =>
     state.map((s) => (s.id === m.id ? { ...s, day: m.day, userId: m.userId } : s)));
   const [, startMove] = useTransition();
@@ -66,7 +58,7 @@ export function ScheduleBoard({ board }: { board: Board }) {
     (s) => { focusShift(s.id); setSelected(s.id); },
     (day, from, to) => openDialog({ draft: { day, userId: null, startMin: from, endMin: to } }),
   );
-  const rail = <ReviewRail sections={sections} blockCount={blockCount} onFocus={(id) => { setSelected(null); focusShift(id); }} />;
+  const rail = <ReviewRail sections={sections} blockCount={blockCount} published={board.status === "PUBLISHED"} onFocus={(id) => { setSelected(null); focusShift(id); }} />;
 
   function onDragEnd(e: DragEndEvent) {
     const s = dragged;
@@ -114,23 +106,28 @@ export function ScheduleBoard({ board }: { board: Board }) {
       <div className="flex gap-4">
         <div className="grid min-w-0 flex-1 gap-3">
           {header}
-          <WeekBanner board={board} recipients={recipients} />
-          {board.canEdit && <BoardToolbar positions={board.positions} filters={filters} onChange={setFilters} />}
-          <LaborStrip board={board} />
+          <WeekBanner board={board} recipients={recipients} blocker={publishBlocker(board, shifts.length)} />
+          {board.canEdit && (
+            <a href="#review" className="sr-only rounded bg-card px-3 py-2 focus:not-sr-only focus:w-fit">Skip to the publish review</a>
+          )}
+          {board.canEdit && !isPhone && <BoardToolbar positions={board.positions} filters={filters} onChange={setFilters} />}
+          <LaborStrip board={board} compact={isPhone} />
           {board.canEdit && !shifts.length && <EmptyWeek locationId={board.location.id} weekStart={board.weekStart} onAddShift={() => openDialog({})} />}
-          <WeekGrid
-            board={board} shifts={shifts} rows={rows} verdicts={verdicts} overId={overId} dragging={!!dragged}
+          {isPhone ? (
+            <DayView board={board} shifts={shifts} rows={rows} meId={meId} onEdit={openDialog} />
+          ) : <WeekGrid
+            board={board} meId={meId} shifts={shifts} rows={rows} verdicts={verdicts} overId={overId} dragging={!!dragged}
             filtered={!!(filters.query || filters.positionId || filters.problemsOnly)}
             onAdd={(draft) => openDialog({ draft })}
             renderShift={(s) => (
               <ShiftSlot key={s.id} board={live} shift={s} selected={selected === s.id} pulsing={pulse === s.id}
                 onSelect={setSelected} onEdit={(x) => { setSelected(null); openDialog({ shift: x }); }} />
             )}
-          />
+          />}
           {board.canEdit && (
             <p className="text-xs text-muted-foreground">
-              Click a shift for details. Drag it to another person or day, or focus it and press Space, then the arrow keys.
-              Double-click an empty cell to add a shift.
+              <span className="pointer-coarse:hidden">Click a shift for details. Drag it to another person or day, or focus it and press Space, then the arrow keys. Double-click an empty cell to add a shift.</span>
+              <span className="hidden pointer-coarse:inline">Tap a shift for details. Use Add shift to add one.</span>
             </p>
           )}
         </div>

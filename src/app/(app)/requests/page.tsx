@@ -33,7 +33,8 @@ export default async function RequestsPage() {
       <PageHeader title="Requests" description="Time off and shift swaps from your staff." />
       <div className="grid gap-8">
         <section className="grid gap-2"><h2 className="font-semibold">Time off waiting for you ({pending.length})</h2><TimeOffList rows={pending} mode="review" /></section>
-        <section className="grid gap-2"><h2 className="font-semibold">Shift swaps{swapsWaiting ? ` (${swapsWaiting} waiting for you)` : ""}</h2><SwapReview rows={swaps} /></section>
+        {swaps.length ? <section className="grid gap-2"><h2 className="font-semibold">Shift swaps{swapsWaiting ? ` (${swapsWaiting} waiting for you)` : ""}</h2><SwapReview rows={swaps} /></section>
+          : <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">Shift swaps:</span> none in the last 30 days.</p>}
         <section className="grid gap-2"><h2 className="font-semibold">Recent time off</h2><TimeOffList rows={rows.filter((r) => r.status !== "PENDING")} mode="review" /></section>
       </div>
     </>

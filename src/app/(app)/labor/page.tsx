@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { requireActor } from "@/server/authz/actor";
 import { laborReport } from "@/server/services/labor-report";
 import { CostChart } from "./cost-chart";
+import { StoreBudgets } from "./store-budgets";
 import { PeopleTable, WeeksTable } from "./tables";
 
 export const metadata = { title: "Labor cost" };
@@ -52,6 +53,7 @@ export default async function LaborPage({ searchParams }: PageProps<"/labor">) {
         <div><p className="text-xs text-muted-foreground">Overtime</p><p className={cn("font-numeric text-4xl leading-none", ot > 0 && "text-overtime")}>{formatCents(ot, { compact: true })}</p></div>
         {budget != null && <div><p className="text-xs text-muted-foreground">Of weekly budget</p><p className={cn("font-numeric text-4xl leading-none", total > budget && "text-danger")}>{Math.round((total / budget) * 100)}%</p></div>}
       </div>
+      <StoreBudgets stores={r.stores} week={r.selected} />
       <div className="grid gap-8 xl:grid-cols-2">
         {r.stores.map((s) => (
           <section key={s.id} className="grid gap-2">

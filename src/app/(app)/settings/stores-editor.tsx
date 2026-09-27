@@ -16,6 +16,12 @@ import { FieldError, formToRecord } from "./form-bits";
 
 interface Store { id: string; name: string; timezone: string; address: string; weeklyBudgetCents: number | null; hasShifts: boolean }
 
+const ZONE_NAMES: Record<string, string> = {
+  "America/New_York": "New York time (Eastern)", "America/Chicago": "Chicago time (Central)", "America/Denver": "Denver time (Mountain)",
+  "America/Phoenix": "Phoenix time (Arizona)", "America/Los_Angeles": "Los Angeles time (Pacific)", "America/Anchorage": "Alaska time", "Pacific/Honolulu": "Hawaii time",
+};
+const zoneName = (z: string) => ZONE_NAMES[z] ?? z.replace("_", " ");
+
 const US_ZONES = ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"];
 
 function StoreDialog({ store, trigger }: { store?: Store; trigger: React.ReactNode }) {
@@ -50,7 +56,7 @@ function StoreDialog({ store, trigger }: { store?: Store; trigger: React.ReactNo
             <Label htmlFor="stz">Time zone</Label>
             <Select value={tz} onValueChange={setTz} disabled={store?.hasShifts}>
               <SelectTrigger id="stz" className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>{zones.map((z) => <SelectItem key={z} value={z}>{z.replace("_", " ")}</SelectItem>)}</SelectContent>
+              <SelectContent>{zones.map((z) => <SelectItem key={z} value={z}>{zoneName(z)}</SelectItem>)}</SelectContent>
             </Select>
             {store?.hasShifts && <p className="text-xs text-muted-foreground">Locked because this store already has shifts.</p>}
             <FieldError msg={errors.timezone} />
@@ -85,7 +91,7 @@ export function StoresEditor({ stores }: { stores: Store[] }) {
               <p className="font-medium">{s.name}</p>
               <p className="text-xs text-muted-foreground">{s.address || "No address"}</p>
             </div>
-            <p className="text-sm text-muted-foreground">{s.timezone.replace("_", " ")}</p>
+            <p className="text-sm text-muted-foreground">{zoneName(s.timezone)}</p>
             <p className="w-32 text-right text-sm tabular-nums">
               {s.weeklyBudgetCents != null ? `${formatCents(s.weeklyBudgetCents, { compact: true })} / week` : <span className="text-muted-foreground">No budget</span>}
             </p>

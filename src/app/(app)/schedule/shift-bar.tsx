@@ -20,6 +20,8 @@ const STATUS_WORD: Record<Exclude<ShiftStatus, null>, string> = { block: "Confli
 
 interface Props {
   shift: BoardShift;
+  /** For screen readers: "Diego Tanaka, Tuesday, Sep 29, …". */
+  context: string;
   position?: { name: string; color: string };
   draggable: boolean;
   selected?: boolean;
@@ -30,13 +32,13 @@ interface Props {
  * One shift in a day cell: the time and role on top, the bar on the 6a–11p track below.
  * The cell is a size container, so labels shrink with the cell, not the window.
  */
-export const ShiftBar = forwardRef<HTMLButtonElement, Props>(function ShiftBar({ shift, position, draggable, selected, onOpen }, ref) {
+export const ShiftBar = forwardRef<HTMLButtonElement, Props>(function ShiftBar({ shift, context, position, draggable, selected, onOpen }, ref) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: shift.id, disabled: !draggable, data: { shift } });
   const status = statusOf(shift);
   const { left, width } = trackPosition(shift.startMin, shift.endMin);
   const color = POSITION_BG[position?.color ?? ""] ?? "bg-muted-foreground";
   const problems = shift.conflicts.filter((c) => !c.overridden).map((c) => c.detail).join(" ");
-  const label = `${spokenRange(shift.startMin, shift.endMin)}${position ? `, ${position.name}` : ""}${problems ? `. ${problems}` : ""}`;
+  const label = `${context}, ${spokenRange(shift.startMin, shift.endMin)}${position ? `, ${position.name}` : ""}${problems ? `. ${problems}` : ""}`;
 
   return (
     <button

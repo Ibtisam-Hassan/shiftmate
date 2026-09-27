@@ -30,7 +30,7 @@ export const admin: Topic[] = [
     title: "Rules, stores and positions",
     roles: ["ADMIN"],
     blocks: [
-      { p: "Only admins can open Settings. The rules apply to every store." },
+      { p: "Only admins can open Settings. Click your initials at the top right, then click Settings. The rules apply to every store." },
       { list: [
         "Overtime after: the weekly hour limit, 40 by default.",
         "Overtime pay multiplier: 1.5 means overtime pays one and a half times the rate.",

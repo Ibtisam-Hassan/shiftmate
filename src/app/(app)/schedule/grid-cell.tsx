@@ -12,12 +12,14 @@ interface Props {
   verdict?: Verdict;
   isOver: boolean;
   dragging: boolean;
+  /** Only the row under the pointer explains why a cell is blocked. */
+  showReason: boolean;
   onAdd?: () => void;
   className?: string;
 }
 
 /** One person-day box. It is a drop target, and a size container so shift labels fit its width. */
-export function GridCell({ id, label, children, verdict, isOver, dragging, onAdd, className }: Props) {
+export function GridCell({ id, label, children, verdict, isOver, dragging, showReason, onAdd, className }: Props) {
   const { setNodeRef } = useDroppable({ id, disabled: verdict?.ok === false });
   const ok = dragging && verdict?.ok;
   const blocked = dragging && verdict?.ok === false;
@@ -36,7 +38,7 @@ export function GridCell({ id, label, children, verdict, isOver, dragging, onAdd
       )}
     >
       {children}
-      {dragging && verdict && (!verdict.ok || verdict.warn) && (
+      {dragging && showReason && verdict && (!verdict.ok || verdict.warn) && (
         <span className={cn("absolute right-1.5 bottom-1 text-[10.5px] font-semibold", verdict.ok ? "text-warning" : "text-muted-foreground")}>
           {verdict.ok ? `⚠ ${verdict.warn}` : `⊘ ${verdict.reason}`}
         </span>
@@ -44,6 +46,7 @@ export function GridCell({ id, label, children, verdict, isOver, dragging, onAdd
       {onAdd && !dragging && (
         <button
           type="button"
+          tabIndex={-1}
           onClick={onAdd}
           aria-label={`Add shift, ${label}`}
           className="absolute right-1 bottom-1 grid size-5 place-items-center rounded text-muted-foreground opacity-0 transition-opacity group-hover/cell:opacity-100 hover:bg-accent focus-visible:opacity-100"

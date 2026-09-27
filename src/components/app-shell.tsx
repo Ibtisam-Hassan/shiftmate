@@ -1,17 +1,17 @@
 "use client";
 
 import {
-  Activity, BarChart3, CalendarDays, CircleHelp, Clock, Inbox, LogOut, Menu, Monitor, Moon, Settings, Sun, UserRoundCheck, Users,
+  Activity, BarChart3, CalendarDays, House, CircleHelp, Clock, Inbox, LogOut, Menu, Monitor, Moon, Settings, Sun, UserRoundCheck, Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { Logo } from "@/components/logo";
+import { BottomTabs } from "@/components/bottom-tabs";
 import { NotificationBell } from "@/components/notifications/bell";
 import type { NavItem } from "@/components/nav";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 
 const ICONS = {
   calendar: CalendarDays, "user-clock": UserRoundCheck, users: Users, inbox: Inbox, chart: BarChart3,
-  settings: Settings, clock: Clock, help: CircleHelp, activity: Activity,
+  settings: Settings, clock: Clock, help: CircleHelp, activity: Activity, home: House,
 } as const;
 
 interface ShellUser { name: string; email: string; role: string; scope: string; isDemo: boolean; unread: number }
@@ -48,6 +48,11 @@ function NavLinks({ items, onNavigate, vertical }: { items: NavItem[]; onNavigat
           >
             {vertical && <Icon className="size-4" aria-hidden />}
             {item.label}
+            {item.badge ? (
+              <span className="grid min-w-5 place-items-center rounded-full bg-kraft-foreground px-1.5 text-[11px] font-bold text-kraft" aria-label={`${item.badge} waiting`}>
+                {item.badge}
+              </span>
+            ) : null}
           </Link>
         );
       })}
@@ -75,6 +80,10 @@ function UserMenu({ user }: { user: ShellUser }) {
           <span className="block text-sm font-medium">{user.name}</span>
           <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
         </DropdownMenuLabel>
+        {user.isDemo && <p className="px-2 pb-1 text-xs text-muted-foreground">Demo data resets every night.</p>}
+        <DropdownMenuSeparator />
+        {user.role === "ADMIN" && <DropdownMenuItem asChild><Link href="/settings"><Settings /> Settings</Link></DropdownMenuItem>}
+        <DropdownMenuItem asChild><Link href="/help"><CircleHelp /> Help</Link></DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => setTheme("light")}><Sun /> Light</DropdownMenuItem>
         <DropdownMenuItem onSelect={() => setTheme("dark")}><Moon /> Dark</DropdownMenuItem>
@@ -106,12 +115,11 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavIte
           <Link href="/" className="py-3"><Logo /></Link>
           <div className="hidden flex-1 md:block"><NavLinks items={nav} /></div>
           <div className="ml-auto flex items-center gap-2">
-            {user.isDemo && <Badge variant="outline" className="hidden border-kraft-foreground/30 text-kraft-foreground lg:inline-flex">Demo data resets nightly</Badge>}
             <NotificationBell unread={user.unread} />
             <UserMenu user={user} />
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu"><Menu /></Button>
+                <Button variant="ghost" size="icon" className={cn("md:hidden", user.role === "EMPLOYEE" && "hidden")} aria-label="Open menu"><Menu /></Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-64 p-3">
                 <SheetTitle className="px-2 py-3"><Logo /></SheetTitle>
@@ -121,9 +129,10 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavIte
           </div>
         </div>
       </header>
-      <main id="main" tabIndex={-1} className="flex-1 p-3 outline-none md:p-5">
-        <div className="min-h-full rounded-[3px] bg-card p-4 shadow-[0_1px_0_var(--border)] md:p-6">{children}</div>
+      <main id="main" tabIndex={-1} className={cn("flex-1 p-3 outline-none md:p-5", user.role === "EMPLOYEE" && "pb-20 sm:pb-3")}>
+        <div className="min-h-full rounded-[3px] bg-card p-4 shadow-[0_1px_0_var(--border)] md:p-6 dark:border dark:border-border">{children}</div>
       </main>
+      {user.role === "EMPLOYEE" && <BottomTabs items={nav} />}
     </div>
   );
 }

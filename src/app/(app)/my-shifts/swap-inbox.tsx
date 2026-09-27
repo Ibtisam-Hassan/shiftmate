@@ -3,11 +3,12 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { whenAt } from "@/domain/format";
 import type { SwapRow } from "@/server/services/swap-list";
 import { cancelSwapAction, respondSwapAction } from "./actions";
 
 export function when(iso: string, tz: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+  return whenAt(new Date(iso), tz);
 }
 
 function Incoming({ row }: { row: SwapRow }) {

@@ -46,7 +46,7 @@ describe("detectConflicts", () => {
     const w = { userId: "u", dayOfWeek: 2, startMinute: 0, endMinute: 780, kind: "UNAVAILABLE" as const, effectiveFrom: "2026-09-01", effectiveTo: null };
     const tue = run({ shifts: [shift("a", "u", "2026-09-29", 9, 17)], unavailability: [w] });
     expect(kinds(tue, "a")).toEqual(["UNAVAILABLE"]);
-    expect(tue[0].detail).toBe("Marked unavailable until 13:00.");
+    expect(tue[0].detail).toBe("Marked unavailable until 1:00 pm.");
     const afternoon = run({ shifts: [shift("a", "u", "2026-09-29", 13, 21)], unavailability: [w] });
     expect(afternoon).toEqual([]);
     const expired = run({ shifts: [shift("a", "u", "2026-09-29", 9, 17)], unavailability: [{ ...w, effectiveTo: "2026-09-15" }] });

@@ -20,7 +20,7 @@ const STATUS = {
 const nice = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
 const range = (r: TimeOffRow) => (r.from === r.to ? nice(r.from) : `${nice(r.from)} to ${nice(r.to)}`);
 
-function Review({ row }: { row: TimeOffRow }) {
+export function Review({ row }: { row: TimeOffRow }) {
   const [pending, start] = useTransition();
   const [note, setNote] = useState("");
   const [openShifts, setOpenShifts] = useState(true);
@@ -31,6 +31,14 @@ function Review({ row }: { row: TimeOffRow }) {
   });
   return (
     <div className="grid gap-2">
+      {row.affected.length > 0 && (
+        <div className="rounded-md bg-muted p-2 text-sm">
+          <p className="font-medium">{row.name.split(" ")[0]} already works:</p>
+          <ul className="mt-1 grid gap-0.5">
+            {row.affected.map((a) => <li key={a.id}><a href={a.href} className="underline underline-offset-2">{a.label}</a></li>)}
+          </ul>
+        </div>
+      )}
       <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note to them (optional)" aria-label="Note" className="h-8 max-w-sm" />
       {row.shiftsInPeriod > 0 && (
         <label className="flex items-center gap-2 text-sm">

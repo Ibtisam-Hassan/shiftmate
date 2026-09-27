@@ -39,6 +39,7 @@ export const basics: Topic[] = [
     blocks: [
       { p: "ShiftMate tells you about changes inside the app. It does not send texts." },
       { p: "You get a notice when your manager publishes a week that includes you. You also get a notice when someone changes one of your shifts in a published week." },
+      { p: "If you are an employee on a phone, use the tabs at the bottom of the screen to open your main pages. Help is in the menu under your initials." },
     ],
   },
   {

@@ -46,7 +46,7 @@ describe("time off", () => {
     expect((await listTimeOff(mgr)).find((r) => r.id === req.id)?.shiftsInPeriod).toBeGreaterThan(0);
     await decideTimeOff(mgr, req.id, { approve: true, openShifts: true, note: "Enjoy" });
     expect((await db.shift.findUniqueOrThrow({ where: { id: shift.id } })).userId).toBeNull();
-    const note = await db.notification.findFirstOrThrow({ where: { userId: emp.id, type: "time_off.decided" } });
+    const note = await db.notification.findFirstOrThrow({ where: { userId: emp.id, type: "time_off.decided" }, orderBy: { createdAt: "desc" } });
     expect([note.title, note.body]).toEqual(["Your time off was approved", "Enjoy"]);
     await expect(decideTimeOff(mgr, req.id, { approve: false })).rejects.toThrow(/already decided/);
   });

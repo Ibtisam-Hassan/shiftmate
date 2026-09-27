@@ -12,9 +12,9 @@ import { POSITION_SWATCH } from "./form-bits";
 
 interface Pos { id: string; name: string; color: string; archived: boolean }
 
-function PositionRow({ storeId, pos }: { storeId: string; pos?: Pos }) {
+function PositionRow({ storeId, pos, freeColor }: { storeId: string; pos?: Pos; freeColor?: string }) {
   const [name, setName] = useState(pos?.name ?? "");
-  const [color, setColor] = useState(pos?.color ?? "cashier");
+  const [color, setColor] = useState(pos?.color ?? freeColor ?? "cashier");
   const [pending, start] = useTransition();
   const dirty = !pos || name !== pos.name || color !== pos.color;
   return (
@@ -37,7 +37,8 @@ function PositionRow({ storeId, pos }: { storeId: string; pos?: Pos }) {
         </SelectContent>
       </Select>
       <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="New position" aria-label="Position name" className="max-w-56" />
-      {dirty && name.trim() && <Button type="submit" size="sm" disabled={pending}>{pos ? "Save" : "Add"}</Button>}
+      {pos ? dirty && name.trim() && <Button type="submit" size="sm" disabled={pending}>Save</Button>
+        : <Button type="submit" size="sm" disabled={pending || !name.trim()}>Add position</Button>}
       {pos && (
         <Button type="button" size="sm" variant="ghost" disabled={pending}
           onClick={() => start(async () => {
@@ -64,7 +65,7 @@ export function PositionsEditor({ stores }: { stores: { id: string; name: string
       {store && (
         <div className="grid gap-2" key={store.id}>
           {store.positions.map((p) => <PositionRow key={p.id} storeId={store.id} pos={p} />)}
-          <PositionRow storeId={store.id} />
+          <PositionRow storeId={store.id} freeColor={Object.keys(POSITION_SWATCH).find((c) => !store.positions.some((p) => p.color === c && !p.archived))} />
         </div>
       )}
     </div>

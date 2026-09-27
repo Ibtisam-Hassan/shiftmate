@@ -4,11 +4,13 @@ import type { Filters } from "./board-toolbar";
 
 const ROLE_ORDER = ["Supervisor", "Cashier", "Stock", "Floor"];
 
-/** The people rows: grouped by the role they work most this week, then by name, then filtered. */
+/** The people rows: grouped by the role they usually work (stable across weeks), then by name, then filtered. */
 export function useRows(board: Board, shifts: BoardShift[], filters: Filters) {
   return useMemo(() => {
     const posById = new Map(board.positions.map((p) => [p.id, p]));
-    const mainRole = (userId: string) => {
+    const mainRole = (userId: string, fallback: string | null) => {
+      if (fallback) return posById.get(fallback);
+      // New people have no history yet: use this week's most-worked position.
       const counts = new Map<string, number>();
       for (const s of shifts) {
         if (s.userId === userId && s.positionId) counts.set(s.positionId, (counts.get(s.positionId) ?? 0) + 1);
@@ -25,7 +27,7 @@ export function useRows(board: Board, shifts: BoardShift[], filters: Filters) {
     return board.people
       .map((p) => ({
         ...p,
-        pos: mainRole(p.id),
+        pos: mainRole(p.id, p.mainPositionId),
         hasProblems:
           shifts.some((s) => s.userId === p.id && s.conflicts.some((c) => !c.overridden)) ||
           (p.overtimeMinutes > 0 && !p.overtimeApproved),

@@ -19,7 +19,7 @@ test("overtime blocks publishing until approved, then the week publishes", async
   await nextWeek(page);
   const publish = page.getByRole("button", { name: "Publish week" });
   await expect(publish).toBeDisabled();
-  await expect(page.getByText(/Can't publish yet: approve overtime/)).toBeVisible();
+  await expect(page.getByText(/Can't publish yet: approve .+ overtime/)).toBeVisible();
 
   const rail = page.getByRole("complementary", { name: "Publish review" });
   await rail.getByRole("button", { name: /^Approve .* overtime$/ }).first().click();
@@ -68,7 +68,10 @@ test("dragging a shift to another person's empty day moves it", async ({ page })
     await page.mouse.up();
 
     await expect(page.getByText(new RegExp(`Moved to ${target!.name}`))).toBeVisible();
-    await expect(grid.getByRole("row", { name: new RegExp(target!.name) }).getByRole("gridcell").nth(1).getByRole("button", { name: label! })).toBeVisible();
+    // The shift's name says whose it is and which day, so after the move it names the new person.
+    const time = label!.split(", ").find((part) => / to /.test(part))!;
+    await expect(grid.getByRole("row", { name: new RegExp(target!.name) }).getByRole("gridcell").nth(1)
+      .getByRole("button", { name: new RegExp(`^${target!.name}, .*${time}`) })).toBeVisible();
   } finally {
     await client.end();
   }

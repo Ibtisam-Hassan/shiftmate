@@ -1,12 +1,11 @@
+import { whenAt } from "@/domain/format";
 import type { Board } from "@/server/services/board";
 
 /** Draft (caution tape) or published record, above the grid. */
-export function WeekBanner({ board, recipients }: { board: Board; recipients: number }) {
+export function WeekBanner({ board, recipients, blocker }: { board: Board; recipients: number; blocker: string | null }) {
   if (!board.canEdit) return null;
   if (board.status === "PUBLISHED") {
-    const when = board.publishedAt && new Date(board.publishedAt).toLocaleString("en-US", {
-      timeZone: board.location.timezone, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-    });
+    const when = board.publishedAt && whenAt(new Date(board.publishedAt), board.location.timezone);
     return (
       <div className="rounded-md bg-accent/60 px-3 py-2 text-sm">
         <span className="font-semibold">Published</span> {when}. Changes send an in-app update to the people affected.
@@ -19,6 +18,7 @@ export function WeekBanner({ board, recipients }: { board: Board; recipients: nu
       <span>
         <span className="font-semibold">Draft.</span> Staff can&apos;t see this week until you publish.
         {" "}Publishing notifies {recipients} {recipients === 1 ? "person" : "people"} in the app.
+        {blocker && <> <span className="font-semibold">{blocker}</span> <a href="#review" className="underline underline-offset-2">See the review</a></>}
       </span>
     </div>
   );

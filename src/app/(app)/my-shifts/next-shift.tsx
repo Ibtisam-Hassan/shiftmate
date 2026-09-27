@@ -1,23 +1,28 @@
 import { POSITION_BG, dayLabel, range, trackPosition } from "@/app/(app)/schedule/format";
+import { clockTime } from "@/domain/format";
 import { cn } from "@/lib/utils";
 import type { MyShift } from "@/server/services/my-shifts";
 
-function countdown(startsAt: string, now: number) {
-  const mins = Math.round((new Date(startsAt).getTime() - now) / 60_000);
-  if (mins <= 0) return "on now";
-  if (mins < 60) return `in ${mins} min`;
-  const h = Math.floor(mins / 60);
-  return h < 48 ? `in ${h} h ${mins % 60} min` : `in ${Math.round(h / 24)} days`;
+function countdown(shift: MyShift, now: number) {
+  const start = new Date(shift.startsAt).getTime();
+  const end = start + (shift.endMin - shift.startMin) * 60_000;
+  const left = (ms: number) => {
+    const mins = Math.round(ms / 60_000);
+    const h = Math.floor(mins / 60);
+    return h >= 48 ? `${Math.round(h / 24)} days` : h ? `${h} h ${mins % 60} min` : `${mins} min`;
+  };
+  return now >= start ? `until ${clockTime(shift.endMin)}, ${left(end - now)} left` : `in ${left(start - now)}`;
 }
 
 /** The kraft hero: your next shift, big enough to read from across the break room. */
 export function NextShift({ shift, now }: { shift: MyShift; now: number }) {
+  const onNow = new Date(shift.startsAt).getTime() <= now;
   const { left, width } = trackPosition(shift.startMin, shift.endMin);
   return (
-    <section aria-label="Your next shift" className="rounded-md bg-kraft p-5 text-kraft-foreground">
+    <section aria-label={onNow ? "Your shift now" : "Your next shift"} className="rounded-md bg-kraft p-5 text-kraft-foreground">
       <p className="flex flex-wrap items-center justify-between gap-2 text-sm font-semibold">
-        Next shift: {dayLabel(shift.day).long}
-        <span className="rounded-full bg-kraft-foreground px-2.5 py-0.5 text-xs text-kraft">{countdown(shift.startsAt, now)}</span>
+        {onNow ? `On now, ${dayLabel(shift.day).long}` : `Next shift: ${dayLabel(shift.day).long}`}
+        <span className="rounded-full bg-kraft-foreground px-2.5 py-0.5 text-xs text-kraft">{countdown(shift, now)}</span>
       </p>
       <p className="mt-2 font-numeric text-6xl leading-none">{range(shift.startMin, shift.endMin)}</p>
       <p className="mt-2 text-sm">

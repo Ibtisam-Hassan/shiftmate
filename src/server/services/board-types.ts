@@ -30,6 +30,8 @@ export interface BoardPerson {
   weekMinutes: number;
   overtimeMinutes: number;
   overtimeApproved: boolean;
+  /** Most-worked position here over the last 8 weeks (stable row grouping). */
+  mainPositionId: string | null;
 }
 
 export interface Busy {

@@ -12,12 +12,14 @@ import type { Board } from "@/server/services/board";
 import { publishWeekAction } from "./actions";
 import { weekTitle } from "./format";
 
-function publishBlocker(board: Board, shiftCount: number) {
+export function publishBlocker(board: Board, shiftCount: number) {
   if (!shiftCount) return "Add shifts to publish.";
   const { conflicts, overtime } = board.blockers;
   const todo = [
     conflicts && `fix ${conflicts} double-booked shift${conflicts > 1 ? "s" : ""}`,
-    overtime.length && `approve overtime for ${overtime.length} ${overtime.length > 1 ? "people" : "person"}`,
+    overtime.length && (overtime.length === 1
+      ? `approve ${board.people.find((p) => p.id === overtime[0].userId)?.name.split(" ")[0] ?? "one person"}'s overtime`
+      : `approve overtime for ${overtime.length} people`),
   ].filter(Boolean);
   return todo.length ? `Can't publish yet: ${todo.join(" and ")}.` : null;
 }
@@ -75,11 +77,12 @@ export function WeekHeader({ board, shiftCount, blockCount, onAddShift, review }
       {board.canEdit && (
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={onAddShift}><Plus /> Add shift</Button>
-          {blocker && <p className="max-w-64 text-right text-xs text-danger">{blocker}</p>}
-          <Button disabled={!!blocker || pending} onClick={publish}>
-            {pending && <Loader2 className="animate-spin" />}
-            {board.status === "PUBLISHED" ? "Publish again" : "Publish week"}
-          </Button>
+          {board.status !== "PUBLISHED" && (
+            <Button disabled={!!blocker || pending} onClick={publish} title={blocker ?? undefined}>
+              {pending && <Loader2 className="animate-spin" />}
+              Publish week
+            </Button>
+          )}
           <Sheet>
             <SheetTrigger asChild>
               <Button size="sm" variant="outline" className="xl:hidden"><ListChecks /> Review{blockCount ? ` (${blockCount})` : ""}</Button>

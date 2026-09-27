@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { whenAt } from "@/domain/format";
 import { requireActor } from "@/server/authz/actor";
 import { recentActivity } from "@/server/services/activity";
 
 export const metadata = { title: "Activity" };
 
-function when(iso: string) {
-  return new Date(iso).toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-}
+// Activity lists every store; the demo stores all run on Chicago time.
+const when = (iso: string) => whenAt(new Date(iso), "America/Chicago");
 
 export default async function ActivityPage() {
   const actor = await requireActor();

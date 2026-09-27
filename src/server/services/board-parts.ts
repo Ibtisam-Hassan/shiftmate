@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { compactRange } from "@/domain/format";
 import { costShifts } from "@/domain/labor";
 import { fromDbDate, localDateOf, localMinuteOf, minutesBetween, weekInterval } from "@/domain/time";
 
@@ -9,8 +10,8 @@ export function localSpan(startsAt: Date, endsAt: Date, tz: string) {
 }
 
 export function fmtRange(startsAt: Date, endsAt: Date, tz: string) {
-  const f = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" });
-  return `${f.format(startsAt)}–${f.format(endsAt)}`.replace(/ (AM|PM)/g, "");
+  const start = localMinuteOf(startsAt, tz);
+  return compactRange(start, start + minutesBetween(startsAt, endsAt));
 }
 
 /**
@@ -66,4 +67,19 @@ export function timeOffDays(requests: { userId: string; startsAt: Date; endsAt: 
     const last = localDateOf(new Date(t.endsAt.getTime() - 1), tz);
     return days.filter((d) => d >= first && d <= last).map((d) => ({ userId: t.userId, day: d }));
   });
+}
+
+/** Each person's most-worked position at a store over the last 8 weeks, so row order stays put week to week. */
+export async function mainPositions(locationId: string, userIds: string[], before: Date) {
+  const rows = await db.shift.groupBy({
+    by: ["userId", "positionId"],
+    where: { locationId, userId: { in: userIds }, positionId: { not: null }, startsAt: { gte: new Date(before.getTime() - 56 * 86_400_000), lt: before } },
+    _count: true,
+  });
+  const best = new Map<string, { positionId: string; n: number }>();
+  for (const r of rows) {
+    const cur = best.get(r.userId!);
+    if (!cur || r._count > cur.n) best.set(r.userId!, { positionId: r.positionId!, n: r._count });
+  }
+  return new Map([...best].map(([u, v]) => [u, v.positionId]));
 }

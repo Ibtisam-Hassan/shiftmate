@@ -50,7 +50,7 @@ export function RulesForm({ defaults }: {
         <FieldError msg={errors.minRestHours} />
       </div>
       <div className="sm:col-span-2">
-        <Button type="submit" disabled={pending}>{pending && <Loader2 className="animate-spin" />}Save rules</Button>
+        <Button type="submit" disabled={pending}>{pending && <Loader2 className="animate-spin" />}Save overtime and rest rules</Button>
       </div>
     </form>
   );

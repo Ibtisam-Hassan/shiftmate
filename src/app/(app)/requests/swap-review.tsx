@@ -13,7 +13,7 @@ const STATUS: Record<string, string> = {
   REJECTED: "Not approved", CANCELLED: "Cancelled", EXPIRED: "Expired",
 };
 
-function Decide({ row }: { row: SwapRow }) {
+export function Decide({ row }: { row: SwapRow }) {
   const [pending, start] = useTransition();
   const decide = (approve: boolean) => start(async () => {
     const res = await decideSwapAction(row.id, approve);

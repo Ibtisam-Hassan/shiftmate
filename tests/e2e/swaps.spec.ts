@@ -9,7 +9,7 @@ test.beforeEach(async ({ request }) => {
 test("an employee offers a shift and the admin sees it in the swap log", async ({ browser }) => {
   const emp = await browser.newPage();
   await loginAs(emp, "Employee");
-  await expect(emp.getByRole("region", { name: "Your next shift" })).toBeVisible();
+  await expect(emp.getByRole("region", { name: /Your (next )?shift( now)?/ })).toBeVisible();
 
   const row = emp.getByRole("region", { name: "Upcoming shifts" }).getByRole("listitem")
     .filter({ has: emp.getByRole("button", { name: "Offer a swap" }) }).first();
@@ -21,7 +21,8 @@ test("an employee offers a shift and the admin sees it in the swap log", async (
   await dialog.getByLabel("Message (optional)").fill("Doctor visit");
   await dialog.getByRole("button", { name: "Send offer" }).click();
   await expect(emp.getByText(/^Sent to /)).toBeVisible();
-  await expect(emp.getByText(new RegExp(`to ${coworker}\\. Waiting for`))).toBeVisible();
+  // On wide screens the swap list sits in the side column; only one copy is visible.
+  await expect(emp.getByText(new RegExp(`to ${coworker}\\. Waiting for`)).filter({ visible: true })).toBeVisible();
 
   // The shift may be at Riverside, which the Downtown manager can't see, so check as the admin.
   const admin = await browser.newPage();

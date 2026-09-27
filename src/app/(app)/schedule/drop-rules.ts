@@ -1,6 +1,6 @@
 import { type CollisionDetection, pointerWithin, rectIntersection } from "@dnd-kit/core";
 import type { Board, BoardShift } from "@/server/services/board";
-import { range } from "./format";
+import { hours, range } from "./format";
 
 const OPEN_ROW = "open";
 
@@ -44,4 +44,16 @@ export function verdictsFor(board: Board, shifts: BoardShift[], dragged: BoardSh
     for (const p of board.people) m.set(cellId(p.id, day), judgeDrop(board, shifts, dragged, { userId: p.id, day }));
   }
   return m;
+}
+
+export /** "Jordan: 36 h → 43.5 h, +3.5 h overtime" for the person under the pointer. */
+function dragHint(board: Board, dragged: BoardShift | null, overId: string | null) {
+  if (!dragged || !overId) return null;
+  const { userId } = parseCell(overId);
+  const p = board.people.find((x) => x.id === userId);
+  if (!p || p.id === dragged.userId) return null;
+  const limit = board.rules.overtimeThresholdMinutes;
+  const after = p.weekMinutes + dragged.paidMinutes;
+  const addedOt = Math.max(0, after - limit) - Math.max(0, p.weekMinutes - limit);
+  return `${p.name.split(" ")[0]}: ${hours(p.weekMinutes)} → ${hours(after)}${addedOt > 0 ? `, +${hours(addedOt)} overtime` : ""}`;
 }

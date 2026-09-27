@@ -5,20 +5,22 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { clockTime, compactRange, dayName } from "@/domain/format";
 import type { UnavailableWindow } from "@/server/services/availability";
 import { saveAvailabilityAction } from "./actions";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DOW = [1, 2, 3, 4, 5, 6, 0];
-const toTime = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
 
 function describe(w: UnavailableWindow) {
   if (w.startMinute === 0 && w.endMinute === 1440) return "All day";
-  return `${toTime(w.startMinute)} to ${w.endMinute === 1440 ? "end of day" : toTime(w.endMinute)}`;
+  return `${clockTime(w.startMinute)} to ${w.endMinute === 1440 ? "end of day" : clockTime(w.endMinute)}`;
 }
 
-export function AvailabilityEditor({ initial }: { initial: UnavailableWindow[] }) {
+type Upcoming = { id: string; day: string; startMin: number; endMin: number; store: string };
+
+export function AvailabilityEditor({ initial, shifts }: { initial: UnavailableWindow[]; shifts: Upcoming[] }) {
   const [windows, setWindows] = useState(initial);
   const [pending, start] = useTransition();
   const [draft, setDraft] = useState<{ day: number; from: string; to: string } | null>(null);
@@ -31,8 +33,19 @@ export function AvailabilityEditor({ initial }: { initial: UnavailableWindow[] }
     else toast.error(res.error);
   });
 
+  // Shifts already published that the new windows would clash with. The schedule is not changed.
+  const clashes = shifts.filter((sh) => windows.some((w) =>
+    w.dayOfWeek === new Date(`${sh.day}T12:00:00Z`).getUTCDay() && w.startMinute < sh.endMin && sh.startMin < w.endMinute));
+
   return (
     <div className="grid max-w-2xl gap-4">
+      {clashes.length > 0 && (
+        <div role="status" className="rounded-md border-l-4 border-warning bg-warning-bg p-3 text-sm">
+          <p className="font-semibold">You already have {clashes.length === 1 ? "a shift" : "shifts"} at these times:</p>
+          <ul className="mt-1">{clashes.map((c) => <li key={c.id}>{dayName(c.day)}, {compactRange(c.startMin, c.endMin)} at {c.store}</li>)}</ul>
+          <p className="mt-1">Availability does not remove shifts. For these days, <a href="/requests" className="underline underline-offset-2">ask for time off</a>.</p>
+        </div>
+      )}
       <ul className="divide-y rounded-md border">
         {DOW.map((dow, i) => {
           const mine = windows.filter((w) => w.dayOfWeek === dow);

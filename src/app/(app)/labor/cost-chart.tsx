@@ -65,7 +65,7 @@ export function CostChart({ weeks, budgetCents, thisWeek, title }: { weeks: Week
           const otTop = y(w.totalCents);
           const now = w.weekStart === thisWeek;
           return (
-            <g key={w.weekStart} tabIndex={0} role="button" aria-label={`Week of ${shortDate(w.weekStart)}: ${money(w.totalCents)}`}
+            <g key={w.weekStart} tabIndex={0} role="button" opacity={w.draft ? 0.55 : 1} aria-label={`Week of ${shortDate(w.weekStart)}: ${money(w.totalCents)}`}
               onPointerEnter={() => setHover(i)} onPointerLeave={() => setHover(null)} onFocus={() => setHover(i)} onBlur={() => setHover(null)}
               className="outline-none focus-visible:[&>rect:first-child]:stroke-ring">
               <rect x={PAD.left + i * band} y={PAD.top} width={band} height={plotH} fill="transparent" strokeWidth={2} />
@@ -75,7 +75,7 @@ export function CostChart({ weeks, budgetCents, thisWeek, title }: { weeks: Week
               {hasOt && <path d={topRounded(x, otTop, BAR, Math.max(1, regTop - GAP - otTop))} fill={`url(#${hatch})`} />}
               {now && <text x={x + BAR / 2} y={otTop - 6} textAnchor="middle" fontSize="11" fontWeight="600" fill="var(--foreground)" stroke="var(--card)" strokeWidth={3} paintOrder="stroke">{money(w.totalCents)}</text>}
               <text x={x + BAR / 2} y={H - 8} textAnchor="middle" fontSize="11" fontWeight={now ? 700 : 400} fill={now ? "var(--foreground)" : "var(--muted-foreground)"}>
-                {now ? "This week" : shortDate(w.weekStart)}
+                {now ? "This week" : w.draft ? `${shortDate(w.weekStart)} draft` : shortDate(w.weekStart)}
               </text>
             </g>
           );

@@ -11,6 +11,7 @@ export interface WeekCost {
   regularCents: number;
   overtimeCents: number;
   totalCents: number;
+  draft: boolean;
 }
 
 export interface StoreReport {
@@ -23,7 +24,8 @@ export interface StoreReport {
 export interface PersonCost {
   userId: string;
   name: string;
-  store: string;
+  /** Every store the person worked at that week, with the cost at each. */
+  stores: { name: string; costCents: number }[];
   minutes: number;
   overtimeMinutes: number;
   costCents: number;
@@ -47,28 +49,33 @@ export async function laborReport(actor: Actor, opts: { storeId?: string; week?:
   const selected = opts.week && weeks.includes(opts.week) ? opts.week : thisWeek;
 
   const reports: StoreReport[] = [];
-  const people: PersonCost[] = [];
+  const people = new Map<string, PersonCost>();
+  const drafts = await db.scheduleWeek.findMany({ where: { locationId: { in: stores.map((s) => s.id) }, status: "DRAFT" }, select: { locationId: true, weekStart: true } });
+  const isDraft = (locationId: string, week: string) => drafts.some((d) => d.locationId === locationId && d.weekStart.toISOString().startsWith(week));
   for (const store of stores) {
     const rows: WeekCost[] = [];
     for (const week of weeks) {
       const { costs } = await laborFor(store.id, store.timezone, week, org);
       const here = costs.shifts.filter((c) => c.locationId === store.id);
       const s = summarize(here);
-      rows.push({ weekStart: week, scheduledMinutes: s.scheduledMinutes, regularCents: s.regularCents, overtimeCents: s.overtimeCents, totalCents: s.totalCents });
+      rows.push({ weekStart: week, scheduledMinutes: s.scheduledMinutes, regularCents: s.regularCents, overtimeCents: s.overtimeCents, totalCents: s.totalCents, draft: isDraft(store.id, week) });
       if (week !== selected) continue;
       const names = new Map((await db.user.findMany({ where: { id: { in: here.map((c) => c.userId) } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]));
       for (const userId of new Set(here.map((c) => c.userId))) {
         const mine = here.filter((c) => c.userId === userId);
         const week = costs.weeks.find((w) => w.userId === userId);
-        people.push({
-          userId, name: names.get(userId) ?? "Unknown", store: store.name,
+        const cost = mine.reduce((a, c) => a + c.regularCents + c.overtimeCents, 0);
+        const person = people.get(userId) ?? {
+          userId, name: names.get(userId) ?? "Unknown", stores: [], costCents: 0,
           minutes: week?.scheduledMinutes ?? 0, overtimeMinutes: week?.overtimeMinutes ?? 0,
-          costCents: mine.reduce((a, c) => a + c.regularCents + c.overtimeCents, 0),
-        });
+        };
+        person.stores.push({ name: store.name, costCents: cost });
+        person.costCents += cost;
+        people.set(userId, person);
       }
     }
     reports.push({ id: store.id, name: store.name, budgetCents: store.weeklyBudgetCents, weeks: rows });
   }
-  people.sort((a, b) => b.costCents - a.costCents);
-  return { stores: reports, allStores: all.map((s) => ({ id: s.id, name: s.name })), weeks, thisWeek, selected, people, overtimeThreshold: org.overtimeThresholdMinutes };
+  const list = [...people.values()].sort((a, b) => b.costCents - a.costCents);
+  return { stores: reports, allStores: all.map((s) => ({ id: s.id, name: s.name })), weeks, thisWeek, selected, people: list, overtimeThreshold: org.overtimeThresholdMinutes };
 }

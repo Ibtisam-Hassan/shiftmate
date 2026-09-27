@@ -68,4 +68,33 @@ export async function plantRequests(ctx: SeedContext, people: Person[], demo: Pe
   await ctx.db.timeOffRequest.create({
     data: { userId: demo.id, reason: "Dentist", status: "APPROVED", startsAt: atLocal(addDays(thisWeek, 14), 0, TZ), endsAt: atLocal(addDays(thisWeek, 15), 0, TZ) },
   });
+  await plantHistory(ctx, { demo, coworker: shift && coworker ? coworker : null, someone: someone ?? null, swapStore: shift?.locationId ?? null });
+}
+
+/** The notices and activity rows that the planted requests and published weeks would have made. */
+async function plantHistory(ctx: SeedContext, who: { demo: Person; coworker: Person | null; someone: Person | null; swapStore: string | null }) {
+  const managers = await ctx.db.managerAssignment.findMany();
+  const admin = await ctx.db.user.findFirstOrThrow({ where: { role: "ADMIN", isDemo: true } });
+  const managerOf = (storeIdx: number) => managers.find((m) => m.locationId === ctx.stores[storeIdx].id)!.userId;
+  const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000);
+
+  const notices = [];
+  if (who.someone) {
+    for (const userId of [managerOf(0), admin.id]) {
+      notices.push({ userId, type: "time_off.requested", title: `${who.someone.name} asked for time off`, body: "Cousin's wedding", href: "/requests", createdAt: hoursAgo(20) });
+    }
+  }
+  if (who.coworker) {
+    notices.push({ userId: who.coworker.id, type: "swap.requested", title: `${who.demo.name} asked you to cover a shift`, href: "/my-shifts", createdAt: hoursAgo(6) });
+  }
+  notices.push({ userId: who.demo.id, type: "time_off.decided", title: "Your time off was approved", body: "Get well soon.", href: "/requests", createdAt: hoursAgo(40) });
+  await ctx.db.notification.createMany({ data: notices });
+
+  const rows = ctx.stores.map((st, i) => ({
+    actorId: managerOf(i), action: "week.publish", entity: "ScheduleWeek", entityId: st.id, locationId: st.id, at: hoursAgo(90 - i),
+  }));
+  rows.push({ actorId: managerOf(0), action: "time_off.approve", entity: "TimeOffRequest", entityId: who.demo.id, locationId: ctx.stores[1].id, at: hoursAgo(40) });
+  if (who.someone) rows.push({ actorId: who.someone.id, action: "time_off.request", entity: "TimeOffRequest", entityId: who.someone.id, locationId: ctx.stores[0].id, at: hoursAgo(20) });
+  if (who.swapStore) rows.push({ actorId: who.demo.id, action: "swap.request", entity: "SwapRequest", entityId: who.demo.id, locationId: who.swapStore, at: hoursAgo(6) });
+  await ctx.db.auditLog.createMany({ data: rows });
 }

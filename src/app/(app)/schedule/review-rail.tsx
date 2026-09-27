@@ -19,7 +19,7 @@ interface Item {
 }
 
 const EDGE: Record<Item["tone"], string> = {
-  block: "border-l-danger", ot: "border-l-overtime", warn: "border-l-warning", gap: "border-l-danger", open: "border-l-muted-foreground border-dashed", kept: "border-l-border",
+  block: "border-l-danger", ot: "border-l-overtime", warn: "border-l-warning", gap: "border-l-warning", open: "border-l-muted-foreground border-dashed", kept: "border-l-border",
 };
 
 function ActionButton({ label, primary, run }: { label: string; primary?: boolean; run: () => Promise<{ ok: boolean; error?: string }> }) {
@@ -76,13 +76,14 @@ export function buildItems(board: Board, openShift: (s: BoardShift) => void, add
       actions: [<ActionButton key="a" primary label={`Approve ${hours(o.overtimeMinutes)} overtime`} run={() => approveOvertimeAction(o.userId, board.weekStart)} />],
     });
   }
-  for (const [day, cov] of Object.entries(board.coverage)) {
+  // An empty week is one job ("start the week"), not seven coverage warnings.
+  for (const [day, cov] of board.shifts.length ? Object.entries(board.coverage) : []) {
     for (const [a, b] of cov.gaps) {
       const lbl = (h: number) => `${h % 12 || 12}${h < 12 ? "a" : "p"}`;
       check.push({
         key: `g-${day}-${a}`, tone: "gap",
         title: `${dayLabel(day).dow} ${lbl(a)}–${lbl(b)} is short-staffed`,
-        detail: `Fewer than ${board.rules.minCoverage} people on the floor while open.`,
+        detail: `Fewer than ${board.rules.minCoverage} people working while the store is open.`,
         actions: [<Button key="add" size="sm" variant="outline" onClick={() => addForGap(day, a * 60, b * 60)}>Add a shift</Button>],
       });
     }
@@ -106,10 +107,11 @@ function ToneIcon({ tone }: { tone: Item["tone"] }) {
   if (tone === "ot") return <span className="rounded-sm bg-overtime px-1 text-[10px] font-bold text-white" aria-hidden>OT</span>;
   if (tone === "open") return <CircleDashed className="size-4 text-muted-foreground" aria-hidden />;
   if (tone === "kept") return <span className="text-muted-foreground" aria-hidden>✓</span>;
-  return <TriangleAlert className={cn("size-4", tone === "gap" ? "text-danger" : "text-warning")} aria-hidden />;
+  return <TriangleAlert className="size-4 text-warning" aria-hidden />;
 }
 
-export function ReviewRail({ sections, blockCount, onFocus }: { sections: [string, Item[]][]; blockCount: number; onFocus: (shiftId: string) => void }) {
+export function ReviewRail({ sections, blockCount, onFocus, published }: { sections: [string, Item[]][]; blockCount: number; onFocus: (shiftId: string) => void; published?: boolean }) {
+  const title = published ? "This week" : "Ready to publish?";
   const [collapsed, setCollapsed] = useState(false);
   const total = sections.reduce((a, [, l]) => a + l.length, 0);
   if (collapsed) {
@@ -117,21 +119,21 @@ export function ReviewRail({ sections, blockCount, onFocus }: { sections: [strin
       <button type="button" onClick={() => setCollapsed(false)} className="sticky top-16 flex w-12 flex-col items-center gap-2 self-start rounded-[3px] bg-card py-4 shadow-[0_1px_0_var(--border)]" aria-label="Open the publish review">
         <ChevronRight className="size-4 rotate-180" aria-hidden />
         {blockCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-danger text-xs font-bold text-white">{blockCount}</span>}
-        <span className="text-xs font-medium [writing-mode:vertical-rl]">Ready to publish?</span>
+        <span className="text-xs font-medium [writing-mode:vertical-rl]">{title}</span>
       </button>
     );
   }
   return (
-    <aside aria-label="Publish review" className="sticky top-16 max-h-[calc(100dvh-5rem)] w-[272px] shrink-0 self-start overflow-y-auto rounded-[3px] bg-card p-4 shadow-[0_1px_0_var(--border)] 2xl:w-[300px]">
+    <aside id="review" tabIndex={-1} aria-label="Publish review" className="sticky top-16 max-h-[calc(100dvh-5rem)] w-[272px] shrink-0 self-start overflow-y-auto rounded-[3px] bg-card p-4 shadow-[0_1px_0_var(--border)] 2xl:w-[300px]">
       <div className="flex items-start justify-between gap-2">
         <h2 className="flex items-center gap-2 font-numeric text-[24px] leading-none">
-          Ready to publish?
+          {title}
           {blockCount > 0 && <span className="inline-grid size-5 shrink-0 place-items-center rounded-full bg-danger font-sans text-xs font-bold text-white">{blockCount}</span>}
         </h2>
         <Button size="icon" variant="outline" className="size-7" onClick={() => setCollapsed(true)} aria-label="Collapse the publish review"><ChevronRight /></Button>
       </div>
       <p className="mt-1 text-sm text-muted-foreground">
-        {blockCount ? `${blockCount} ${blockCount === 1 ? "thing blocks" : "things block"} publishing. Click an item to find it on the grid.` : total ? "Nothing blocks publishing. Worth a look:" : "All clear. Nothing needs you before publishing."}
+        {published ? (total ? "Staff can see this week. These still need a look:" : "Staff can see this week. Nothing needs you.") : blockCount ? `${blockCount} ${blockCount === 1 ? "thing blocks" : "things block"} publishing. Select an item to find it on the grid.` : total ? "Nothing blocks publishing. Worth a look:" : "All clear. Nothing needs you before publishing."}
       </p>
       {sections.map(([title, items]) => (
         <section key={title} className="mt-4 grid gap-2">

@@ -10,9 +10,16 @@ import { DEMO_EMAIL_DOMAIN } from "@/lib/demo";
 
 const demoMode = process.env.DEMO_MODE === "true";
 
+/** APP_URL wins; otherwise Vercel's own URL for this deployment (production domain or preview URL). */
+function appUrl() {
+  if (process.env.APP_URL) return process.env.APP_URL;
+  const host = process.env.VERCEL_ENV === "production" ? process.env.VERCEL_PROJECT_PRODUCTION_URL : process.env.VERCEL_URL;
+  return host ? `https://${host}` : "http://localhost:3000";
+}
+
 export const auth = betterAuth({
   appName: "ShiftMate",
-  baseURL: process.env.APP_URL,
+  baseURL: appUrl(),
   secret: process.env.BETTER_AUTH_SECRET,
   database: prismaAdapter(db, { provider: "postgresql" }),
   // Password sign-in exists only so the demo buttons work: sign-up is off and real users

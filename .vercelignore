@@ -1,0 +1,7 @@
+# Never upload local secrets or bulky dev-only folders with `vercel deploy`.
+.env
+.env.*
+design
+tests
+test-results
+playwright-report

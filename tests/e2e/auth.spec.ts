@@ -28,10 +28,16 @@ test("magic link signs an invited user in; unknown emails get the same response"
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
+    const started = new Date();
     await page.goto("/login");
     await page.getByLabel("Work email").fill("nobody@example.com");
     await page.getByRole("button", { name: /Email me a sign-in link/ }).click();
     await expect(page.getByText("Check your inbox.")).toBeVisible();
+
+    // No link is even created for an address with no account.
+    const stranger = await client.query(
+      `select count(*)::int as n from verification where value like '%nobody@example.com%' and "createdAt" >= $1`, [started]);
+    expect(stranger.rows[0].n).toBe(0);
 
     await page.goto("/login");
     const email = "manager@demo.shiftmate.app";

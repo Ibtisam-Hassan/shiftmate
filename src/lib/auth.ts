@@ -56,7 +56,13 @@ export const auth = betterAuth({
     magicLink({
       disableSignUp: true, // invite-only: unknown emails get no link
       expiresIn: 60 * 15,
-      sendMagicLink: async ({ email, url }) => sendMagicLinkEmail(email, url),
+      sendMagicLink: async ({ email, url }) => {
+        // `disableSignUp` only refuses the link when it's used; without this check we'd still email
+        // any address typed into the form. Unknown and deactivated addresses get nothing, silently.
+        const user = await db.user.findUnique({ where: { email: email.toLowerCase() }, select: { status: true } });
+        if (!user || user.status === "DEACTIVATED") return;
+        await sendMagicLinkEmail(email, url);
+      },
     }),
     nextCookies(), // must stay last
   ],

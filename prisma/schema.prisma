@@ -61,6 +61,8 @@ model Organization {
   overtimeMultiplierPercent Int        @default(150)
   weekStartsOn              Int        @default(1) // 0 = Sunday … 6 = Saturday
   minRestMinutes            Int        @default(480)
+  /// Fewest people on the floor during opening hours before the schedule flags a coverage gap.
+  minCoverage               Int        @default(2)
   createdAt                 DateTime   @default(now())
   updatedAt                 DateTime   @updatedAt
   locations                 Location[]
@@ -75,6 +77,9 @@ model Location {
   address    String?
   /// Weekly labor budget for the store; null = no budget set.
   weeklyBudgetCents Int?
+  /// Opening hours, minutes after local midnight (same every day for now).
+  openMinute  Int @default(480)
+  closeMinute Int @default(1320)
   archivedAt DateTime?
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt

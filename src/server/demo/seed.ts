@@ -234,7 +234,8 @@ export async function resetDemoData(db: PrismaClient, opts: { now?: Date; adminE
   }
   // 2. Availability clash: a student put on a weekday-morning shift.
   const student = people.find((p) => p.stores[0] === 0 && p.unavailable.some(([d]) => d === 2));
-  const tuesdayOpen = downtownDraft.find((s) => dayOfWeek(localDateOf(s.startsAt, TZ)) === 2 && s.userId && s.userId !== student?.id);
+  // Never take a shift from the overtime person, or they drop back under 40h.
+  const tuesdayOpen = downtownDraft.find((s) => dayOfWeek(localDateOf(s.startsAt, TZ)) === 2 && s.userId && s.userId !== student?.id && s.userId !== otPerson?.id);
   if (student && tuesdayOpen && !(booked.get(student.id) ?? []).some((b) => overlaps(b.start, b.end, tuesdayOpen.startsAt, tuesdayOpen.endsAt))) {
     tuesdayOpen.userId = student.id;
   }

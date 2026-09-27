@@ -4,7 +4,8 @@ import { addDays, localDateOf, weekStartOf } from "@/domain/time";
 import { POSITIONS, STORES, TZ, WEEK_STARTS_ON, rng } from "./data";
 import { type SeedContext, type Store, createPeople } from "./people";
 import { planWeeks } from "./plan";
-import { plantProblems, plantRequests } from "./showcase";
+import { plantPastOvertime, plantProblems, plantRequests } from "./showcase";
+import { costShifts } from "@/domain/labor";
 
 export interface SeedResult { weekStart: string; users: number; shifts: number }
 
@@ -42,10 +43,18 @@ export async function resetDemoData(db: PrismaClient, opts: { now?: Date; adminE
   const { people, demoEmployee, count } = await createPeople(ctx, opts.adminEmail);
   const { rows, roster } = await planWeeks(ctx, people, thisWeek);
   plantProblems(rows, roster, people, demoEmployee, ctx.stores[0].id, addDays(thisWeek, 7));
+  const pastOt = plantPastOvertime(rows, roster, people, [addDays(thisWeek, -28), addDays(thisWeek, -14)], ctx.stores.map((s) => s.id));
   await db.shift.createMany({
     data: rows.map(({ scheduleWeekId, locationId, userId, positionId, startsAt, endsAt, breakMinutes }) =>
       ({ scheduleWeekId, locationId, userId, positionId, startsAt, endsAt, breakMinutes })),
   });
   await plantRequests(ctx, people, demoEmployee, thisWeek, now);
+  const org = await db.organization.findFirstOrThrow();
+  const admin = await db.user.findUniqueOrThrow({ where: { email: "admin@demo.shiftmate.app" } });
+  for (const { userId, week } of pastOt) {
+    const theirs = rows.filter((r) => r.userId === userId && r.week === week).map((r, i) => ({ ...r, id: String(i) }));
+    const minutes = costShifts(theirs, { ...org, tzOf: () => TZ, ratesOf: () => [] }).weeks[0]?.scheduledMinutes ?? 0;
+    await db.overtimeApproval.create({ data: { userId, weekStart: new Date(week), approvedMinutes: minutes, approvedById: admin.id, note: "Holiday rush" } });
+  }
   return { weekStart: thisWeek, users: count, shifts: rows.length };
 }

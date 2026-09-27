@@ -19,6 +19,8 @@
   --color-kraft-foreground: var(--kraft-foreground);
   --color-track: var(--track);
   --color-caution: var(--caution);
+  --color-chart-regular: var(--chart-regular);
+  --color-chart-overtime: var(--chart-overtime);
   --font-display: var(--font-display);
   --font-stencil: var(--font-stencil);
   --color-background: var(--background);
@@ -111,6 +113,8 @@
   --kraft-foreground: #241C14;
   --track: #EFE6D8;
   --caution: #E8B400;
+  --chart-regular: #9A5210;
+  --chart-overtime: #A8246A;
 }
 
 .dark {
@@ -158,6 +162,8 @@
   --kraft: #4A3824;
   --kraft-foreground: #F4E6D2;
   --track: #2E251B;
+  --chart-regular: #C27325;
+  --chart-overtime: #D9559A;
   --caution: #E8B400;
 }
 

@@ -58,9 +58,10 @@ export async function createPeople(ctx: SeedContext, ownerEmail?: string) {
   }
 
   let n = 0;
-  const demoEmployee = await addEmployee(ctx, n++, [0, 1], `employee@${DEMO_EMAIL_DOMAIN}`);
+  // Home is Riverside (planned first, so her upcoming shifts are there); she also works Downtown.
+  const demoEmployee = await addEmployee(ctx, n++, [1, 0], `employee@${DEMO_EMAIL_DOMAIN}`);
   demoEmployee.unavailable = []; // the demo login must stay schedulable
-  const people = [demoEmployee, await addEmployee(ctx, n++, [1, 0])];
+  const people = [demoEmployee, await addEmployee(ctx, n++, [0, 1])];
   for (const s of ctx.stores.keys()) for (let i = 0; i < 8; i++) people.push(await addEmployee(ctx, n++, [s]));
 
   await ctx.db.availability.createMany({

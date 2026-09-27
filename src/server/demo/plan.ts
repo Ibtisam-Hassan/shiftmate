@@ -6,7 +6,7 @@ import { type Person, type PlannedShift, Roster } from "./roster";
 const WEEKLY_CAP = 38 * 60;
 
 /**
- * Two past weeks and this week are published everywhere. Next week is a draft only at Downtown,
+ * Six past weeks and this week are published everywhere. Next week is a draft only at Downtown,
  * where the manager demo's problems live. Riverside is planned first each week so the demo
  * employee (Downtown + Riverside) always has published Riverside shifts coming up.
  */
@@ -14,7 +14,7 @@ export async function planWeeks(ctx: SeedContext, people: Person[], thisWeek: st
   const roster = new Roster();
   const rows: PlannedShift[] = [];
   const order = [1, 0, 2];
-  for (const week of [-14, -7, 0, 7].map((d) => addDays(thisWeek, d))) {
+  for (const week of [-42, -35, -28, -21, -14, -7, 0, 7].map((d) => addDays(thisWeek, d))) {
     for (const si of order) {
       const store = ctx.stores[si];
       const draft = week > thisWeek && si === 0;

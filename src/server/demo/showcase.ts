@@ -26,6 +26,25 @@ export function plantProblems(rows: PlannedShift[], roster: Roster, people: Pers
   if (friday) roster.assign(friday, null);
 }
 
+/**
+ * Real stores run some overtime. Push one person past 40 hours in two past weeks, and record the
+ * approvals a manager would have given before publishing.
+ */
+export function plantPastOvertime(rows: PlannedShift[], roster: Roster, people: Person[], weeks: string[], storeIds: string[]) {
+  const approved: { userId: string; week: string }[] = [];
+  weeks.forEach((week, i) => {
+    const storeIdx = i % storeIds.length;
+    const person = people.find((p) => p.stores.length === 1 && p.stores[0] === storeIdx && p.unavailable.length === 0);
+    if (!person) return;
+    for (const s of rows.filter((r) => r.week === week && r.locationId === storeIds[storeIdx])) {
+      if (roster.minutes(person.id, week) > 42 * 60) break;
+      if (s.userId !== person.id && roster.isFree(person, s)) roster.assign(s, person.id);
+    }
+    approved.push({ userId: person.id, week });
+  });
+  return approved;
+}
+
 /** A pending swap from the demo employee, one pending and one approved time-off request. */
 export async function plantRequests(ctx: SeedContext, people: Person[], demo: Person, thisWeek: string, now: Date) {
   const shift = await ctx.db.shift.findFirst({

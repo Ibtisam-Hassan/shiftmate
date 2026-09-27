@@ -33,10 +33,12 @@ describe("time off", () => {
   });
 
   it("approving can open the person's shifts in that period, and tells them", async () => {
-    const mgr = await actorFor("manager@demo.shiftmate.app");
     const shift = await db.shift.findFirstOrThrow({
       where: { user: { email: "employee@demo.shiftmate.app" }, startsAt: { gt: new Date() } }, orderBy: { startsAt: "asc" },
     });
+    // The manager of that shift's store: a manager only opens shifts at their own store.
+    const assignment = await db.managerAssignment.findFirstOrThrow({ where: { locationId: shift.locationId }, include: { user: true } });
+    const mgr = await actorFor(assignment.user.email);
     const emp = await actorFor("employee@demo.shiftmate.app");
     const day = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(shift.startsAt);
     await requestTimeOff(emp, { from: day, to: day });

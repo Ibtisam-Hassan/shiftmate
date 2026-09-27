@@ -69,6 +69,18 @@ export const publishing: Topic[] = [
     ],
   },
   {
+    id: "labor-page",
+    title: "The Labor cost page",
+    roles: MANAGERS,
+    blocks: [
+      { p: "The Labor cost page shows the scheduled cost of each week. A manager sees their store. An admin sees every store, one chart for each." },
+      { p: "Each bar is one week. The solid part is regular pay. The striped part on top is overtime pay. The dashed line is the weekly budget." },
+      { p: "Point at a bar, or press Tab to reach it, to see the numbers for that week. Click Show the numbers to see all weeks in a table." },
+      { p: "The table of people shows who worked in the chosen week. Hours count every store. Cost counts this store only." },
+      { p: "Click Download CSV to get one row for each shift in the chosen week. You can open the file in Excel or Google Sheets." },
+    ],
+  },
+  {
     id: "coverage",
     title: "Coverage",
     roles: MANAGERS,

@@ -12,18 +12,24 @@ beforeEach(async () => {
   await db.scheduleWeek.updateMany({ data: { status: "PUBLISHED" } });
 });
 
-/** The demo employee's next published shift at Downtown. */
+/** The demo employee's next published shift, at whichever store it is. */
 async function myNextShift() {
   return db.shift.findFirstOrThrow({
-    where: { user: { email: "employee@demo.shiftmate.app" }, startsAt: { gt: new Date() }, scheduleWeek: { status: "PUBLISHED" }, location: { name: "Downtown" } },
-    orderBy: { startsAt: "asc" },
+    where: { user: { email: "employee@demo.shiftmate.app" }, startsAt: { gt: new Date() }, scheduleWeek: { status: "PUBLISHED" } },
+    orderBy: { startsAt: "asc" }, include: { location: true },
   });
 }
 
 async function freshCoworker(email: string) {
-  const loc = await db.location.findFirstOrThrow({ where: { name: "Downtown" } });
-  await db.user.create({ data: { id: email, name: `Fresh ${email}`, email, status: "ACTIVE", locations: { create: { locationId: loc.id } } } });
+  const shift = await myNextShift();
+  await db.user.create({ data: { id: email, name: `Fresh ${email}`, email, status: "ACTIVE", locations: { create: { locationId: shift.locationId } } } });
   return actorFor(email);
+}
+
+/** The manager of the store where a shift is. */
+async function managerOf(locationId: string) {
+  const m = await db.managerAssignment.findFirstOrThrow({ where: { locationId }, include: { user: true } });
+  return actorFor(m.user.email);
 }
 
 describe("swaps", () => {
@@ -51,9 +57,9 @@ describe("swaps", () => {
     expect(res.problems.join(" ")).toMatch(/overtime/);
     expect((await db.shift.findUniqueOrThrow({ where: { id: shift.id } })).userId).toBe(me.id);
 
-    const oakPark = await actorFor("manager.oakpark@demo.shiftmate.app");
-    await expect(decideSwap(oakPark, req.id, true)).rejects.toBeInstanceOf(ForbiddenError);
-    await decideSwap(await actorFor("manager@demo.shiftmate.app"), req.id, true);
+    const other = await db.managerAssignment.findFirstOrThrow({ where: { locationId: { not: shift.locationId } }, include: { user: true } });
+    await expect(decideSwap(await actorFor(other.user.email), req.id, true)).rejects.toBeInstanceOf(ForbiddenError);
+    await decideSwap(await managerOf(shift.locationId), req.id, true);
     expect((await db.shift.findUniqueOrThrow({ where: { id: shift.id } })).userId).toBe(buddy.id);
   });
 

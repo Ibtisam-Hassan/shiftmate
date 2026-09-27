@@ -2,6 +2,7 @@ import { AppShell } from "@/components/app-shell";
 import { navFor } from "@/components/nav";
 import { db } from "@/lib/db";
 import { requireActor } from "@/server/authz/actor";
+import { unreadCount } from "@/server/services/notifications";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const actor = await requireActor();
@@ -14,7 +15,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   }
   return (
     <AppShell
-      user={{ name: actor.name, email: actor.email, role: actor.role, scope, isDemo: actor.isDemo }}
+      user={{ name: actor.name, email: actor.email, role: actor.role, scope, isDemo: actor.isDemo, unread: await unreadCount(actor) }}
       nav={navFor(actor.role)}
     >
       {children}

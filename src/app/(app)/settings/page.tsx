@@ -3,7 +3,9 @@ import { PageHeader } from "@/components/page-header";
 import { db } from "@/lib/db";
 import { requireActor } from "@/server/authz/actor";
 import { getOrg } from "@/server/services/settings";
-import { PositionsEditor, RulesForm, StoresEditor } from "./settings-forms";
+import { PositionsEditor } from "./positions-editor";
+import { RulesForm } from "./rules-form";
+import { StoresEditor } from "./stores-editor";
 
 export const metadata = { title: "Settings" };
 

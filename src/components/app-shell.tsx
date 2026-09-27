@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { Logo } from "@/components/logo";
+import { NotificationBell } from "@/components/notifications/bell";
 import type { NavItem } from "@/components/nav";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,7 @@ const ICONS = {
   settings: Settings, clock: Clock, help: CircleHelp,
 } as const;
 
-interface ShellUser { name: string; email: string; role: string; scope: string; isDemo: boolean }
+interface ShellUser { name: string; email: string; role: string; scope: string; isDemo: boolean; unread: number }
 
 function NavLinks({ items, onNavigate, vertical }: { items: NavItem[]; onNavigate?: () => void; vertical?: boolean }) {
   const pathname = usePathname();
@@ -103,6 +104,7 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavIte
           <div className="hidden flex-1 md:block"><NavLinks items={nav} /></div>
           <div className="ml-auto flex items-center gap-2">
             {user.isDemo && <Badge variant="outline" className="hidden border-kraft-foreground/30 text-kraft-foreground lg:inline-flex">Demo data resets nightly</Badge>}
+            <NotificationBell unread={user.unread} />
             <UserMenu user={user} />
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>

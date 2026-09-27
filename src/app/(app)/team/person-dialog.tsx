@@ -4,7 +4,6 @@ import { Loader2, Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -14,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Role } from "@/server/authz/policy";
 import type { TeamMember } from "@/server/services/people";
 import { savePersonAction } from "./actions";
+import { StorePicker } from "./store-picker";
 
 interface Loc { id: string; name: string }
 
@@ -117,27 +117,7 @@ export function PersonDialog({ locations, actorRole, person, trigger }: {
           )}
 
           {isAdmin && role === "EMPLOYEE" && (
-            <fieldset className="grid gap-2">
-              <legend className="mb-1 text-sm font-medium">Stores they can work at</legend>
-              {locations.map((l) => (
-                <div key={l.id} className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={storeIds.includes(l.id)}
-                      onCheckedChange={(c) => setStoreIds((ids) => (c ? [...ids, l.id] : ids.filter((x) => x !== l.id)))}
-                    />
-                    {l.name}
-                  </label>
-                  {storeIds.includes(l.id) && (
-                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <input type="radio" name="home" checked={homeId === l.id} onChange={() => setHomeId(l.id)} className="accent-primary" />
-                      Home store
-                    </label>
-                  )}
-                </div>
-              ))}
-              {errors.locationIds && <p className="text-xs text-danger">{errors.locationIds}</p>}
-            </fieldset>
+            <StorePicker locations={locations} storeIds={storeIds} setStoreIds={setStoreIds} homeId={homeId} setHomeId={setHomeId} error={errors.locationIds} />
           )}
 
           {!person && role !== "ADMIN" && (

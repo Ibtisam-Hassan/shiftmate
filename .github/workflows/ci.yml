@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: shiftmate
+          POSTGRES_PASSWORD: shiftmate
+          POSTGRES_DB: shiftmate
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U shiftmate" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://shiftmate:shiftmate@localhost:5432/shiftmate
+      TEST_DATABASE_URL: postgresql://shiftmate:shiftmate@localhost:5432/shiftmate_test
+      BETTER_AUTH_SECRET: ci-only-secret-ci-only-secret-ci-only-secret
+      APP_URL: http://localhost:3000
+      DEMO_MODE: "true"
+      DEMO_PASSWORD: ci-demo-password
+      CRON_SECRET: ci-cron-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: psql "$DATABASE_URL" -c "create database shiftmate_test"
+      - run: npx prisma migrate deploy
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:integration
+      - run: npm run build
+      - run: npm run db:seed
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+        env:
+          CI: "true"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

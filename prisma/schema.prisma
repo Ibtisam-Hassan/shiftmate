@@ -1,0 +1,384 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  DEACTIVATED
+}
+
+enum WeekStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum AvailabilityKind {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+  CANCELLED
+}
+
+enum SwapStatus {
+  PENDING_COWORKER
+  PENDING_MANAGER
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum ConflictKind {
+  UNAVAILABLE
+  TIME_OFF
+  SHORT_REST
+  NOT_ASSIGNED_TO_LOCATION
+}
+
+// ─── Organization ────────────────────────────────────────────────────────────
+
+model Organization {
+  id                        String     @id @default(cuid())
+  name                      String
+  overtimeThresholdMinutes  Int        @default(2400)
+  overtimeMultiplierPercent Int        @default(150)
+  weekStartsOn              Int        @default(1) // 0 = Sunday … 6 = Saturday
+  minRestMinutes            Int        @default(480)
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
+  locations                 Location[]
+}
+
+model Location {
+  id         String             @id @default(cuid())
+  orgId      String
+  org        Organization       @relation(fields: [orgId], references: [id])
+  name       String
+  timezone   String // IANA, e.g. America/Chicago
+  address    String?
+  archivedAt DateTime?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  managers   ManagerAssignment[]
+  employees  EmployeeLocation[]
+  positions  Position[]
+  weeks      ScheduleWeek[]
+  shifts     Shift[]
+}
+
+// ─── Better Auth core models (field names are fixed by the library) ──────────
+
+model User {
+  id            String     @id
+  name          String
+  email         String     @unique
+  emailVerified Boolean    @default(false)
+  image         String?
+  role          Role       @default(EMPLOYEE)
+  status        UserStatus @default(INVITED)
+  isDemo        Boolean    @default(false)
+  phone         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  sessions          Session[]
+  accounts          Account[]
+  managerOf         ManagerAssignment?
+  locations         EmployeeLocation[]
+  payRates          PayRate[]
+  shifts            Shift[]            @relation("ShiftAssignee")
+  availability      Availability[]
+  timeOffRequests   TimeOffRequest[]   @relation("TimeOffRequester")
+  timeOffReviewed   TimeOffRequest[]   @relation("TimeOffReviewer")
+  swapsRequested    SwapRequest[]      @relation("SwapRequester")
+  swapsTargeted     SwapRequest[]      @relation("SwapTarget")
+  swapsDecided      SwapRequest[]      @relation("SwapDecider")
+  overtimeApprovals OvertimeApproval[] @relation("OvertimeEmployee")
+  overtimeApproved  OvertimeApproval[] @relation("OvertimeApprover")
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  weeksPublished    ScheduleWeek[]
+  overrides         ConflictOverride[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rateLimit")
+}
+
+// ─── People ──────────────────────────────────────────────────────────────────
+
+/// A manager runs exactly one store.
+model ManagerAssignment {
+  userId     String   @id
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+
+  @@index([locationId])
+}
+
+/// Where an employee may be scheduled.
+model EmployeeLocation {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+  isHome     Boolean  @default(false)
+
+  @@id([userId, locationId])
+  @@index([locationId])
+}
+
+/// Rate history: the rate in force on a shift's start date applies to that shift.
+model PayRate {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hourlyRateCents Int
+  effectiveFrom   DateTime @db.Date
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, effectiveFrom])
+}
+
+model Position {
+  id         String   @id @default(cuid())
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+  name       String
+  color      String // tailwind palette key, e.g. "teal"
+  archivedAt DateTime?
+  shifts     Shift[]
+
+  @@unique([locationId, name])
+}
+
+// ─── Scheduling ──────────────────────────────────────────────────────────────
+
+model ScheduleWeek {
+  id            String     @id @default(cuid())
+  locationId    String
+  location      Location   @relation(fields: [locationId], references: [id])
+  weekStart     DateTime   @db.Date // local calendar date the week starts on
+  status        WeekStatus @default(DRAFT)
+  publishedAt   DateTime?
+  publishedById String?
+  publishedBy   User?      @relation(fields: [publishedById], references: [id])
+  shifts        Shift[]
+
+  @@unique([locationId, weekStart])
+}
+
+/// No-overlap per employee is enforced by an exclusion constraint added in raw SQL
+/// (see migration `shift_no_overlap`); Prisma can't express it.
+model Shift {
+  id             String             @id @default(cuid())
+  scheduleWeekId String
+  scheduleWeek   ScheduleWeek       @relation(fields: [scheduleWeekId], references: [id], onDelete: Cascade)
+  locationId     String
+  location       Location           @relation(fields: [locationId], references: [id])
+  userId         String? // null = open shift
+  user           User?              @relation("ShiftAssignee", fields: [userId], references: [id])
+  positionId     String?
+  position       Position?          @relation(fields: [positionId], references: [id])
+  startsAt       DateTime           @db.Timestamptz(3)
+  endsAt         DateTime           @db.Timestamptz(3)
+  breakMinutes   Int                @default(0)
+  notes          String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  overrides      ConflictOverride[]
+  swapRequests   SwapRequest[]      @relation("SwapShift")
+  tradeFor       SwapRequest[]      @relation("SwapTargetShift")
+
+  @@index([locationId, startsAt])
+  @@index([userId, startsAt])
+}
+
+/// A manager's recorded decision to keep a shift despite a soft conflict.
+model ConflictOverride {
+  id      String       @id @default(cuid())
+  shiftId String
+  shift   Shift        @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  kind    ConflictKind
+  reason  String
+  byId    String
+  by      User         @relation(fields: [byId], references: [id])
+  at      DateTime     @default(now())
+
+  @@unique([shiftId, kind])
+}
+
+/// Recurring weekly wall-clock window, interpreted in the time zone of the shift's location.
+model Availability {
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayOfWeek     Int // 0 = Sunday
+  startMinute   Int // minutes after local midnight
+  endMinute     Int // exclusive; 1440 = end of day
+  kind          AvailabilityKind
+  effectiveFrom DateTime         @db.Date
+  effectiveTo   DateTime?        @db.Date
+  note          String?
+
+  @@index([userId, dayOfWeek])
+}
+
+model TimeOffRequest {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation("TimeOffRequester", fields: [userId], references: [id], onDelete: Cascade)
+  startsAt     DateTime      @db.Timestamptz(3)
+  endsAt       DateTime      @db.Timestamptz(3)
+  reason       String?
+  status       RequestStatus @default(PENDING)
+  reviewedById String?
+  reviewedBy   User?         @relation("TimeOffReviewer", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+  reviewNote   String?
+  createdAt    DateTime      @default(now())
+
+  @@index([userId, startsAt])
+  @@index([status])
+}
+
+model SwapRequest {
+  id            String     @id @default(cuid())
+  shiftId       String
+  shift         Shift      @relation("SwapShift", fields: [shiftId], references: [id], onDelete: Cascade)
+  requesterId   String
+  requester     User       @relation("SwapRequester", fields: [requesterId], references: [id])
+  targetUserId  String
+  targetUser    User       @relation("SwapTarget", fields: [targetUserId], references: [id])
+  targetShiftId String? // null = cover, set = trade
+  targetShift   Shift?     @relation("SwapTargetShift", fields: [targetShiftId], references: [id], onDelete: Cascade)
+  status        SwapStatus @default(PENDING_COWORKER)
+  message       String?
+  decidedById   String?
+  decidedBy     User?      @relation("SwapDecider", fields: [decidedById], references: [id])
+  decidedAt     DateTime?
+  escalationReason String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([status])
+  @@index([targetUserId, status])
+}
+
+model OvertimeApproval {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation("OvertimeEmployee", fields: [userId], references: [id], onDelete: Cascade)
+  weekStart       DateTime @db.Date
+  approvedMinutes Int // total weekly minutes approved; more hours need a fresh approval
+  approvedById    String
+  approvedBy      User     @relation("OvertimeApprover", fields: [approvedById], references: [id])
+  note            String?
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, weekStart])
+}
+
+// ─── Cross-cutting ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  locationId String?
+  action     String
+  entity     String
+  entityId   String
+  before     Json?
+  after      Json?
+  at         DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([locationId, at])
+}
